@@ -88,11 +88,11 @@
                 <p id="appSubtitle" class="text-slate-300 text-xs mt-0.5 font-semibold tracking-wider">FOOD ORDER</p>
             </div>
 
-            <!-- RECENTLY ORDER -->
+            <!-- RECENTLY ORDER (Display last 2 hours, NO EDIT BUTTON) -->
             <div class="px-3 mb-3">
                 <div class="bg-sky-50 border border-sky-200 p-2.5 rounded-xl shadow-sm">
                     <div class="flex justify-between items-center cursor-pointer select-none">
-                        <span class="text-[11px] font-extrabold text-navyPrimary uppercase tracking-tight flex items-center shrink-0" onclick="toggleHistoryList()"><i class="fa-solid fa-clock-rotate-left text-sky-500 mr-1.5 text-xs"></i> Recently Order</span>
+                        <span class="text-[11px] font-extrabold text-navyPrimary uppercase tracking-tight flex items-center shrink-0" onclick="toggleHistoryList()"><i class="fa-solid fa-clock-rotate-left text-sky-500 mr-1.5 text-xs"></i> RECENTLY ORDER</span>
                         <div class="flex items-center space-x-1.5">
                             <button type="button" onclick="fetchCloudHistory(event)" class="text-[9px] text-white font-bold bg-sky-600 px-1.5 py-0.5 rounded hover:bg-sky-700 whitespace-nowrap shadow-xs"><i class="fa-solid fa-rotate mr-0.5"></i> Sync</button>
                             <button type="button" onclick="openExportModal(event)" class="text-[9px] text-sky-700 font-bold bg-sky-200 px-1.5 py-0.5 rounded hover:bg-sky-300 whitespace-nowrap"><i class="fa-solid fa-file-arrow-down mr-0.5"></i> Export</button>
@@ -118,14 +118,14 @@
                         <div><label class="text-[11px] text-slate-500 font-bold uppercase tracking-wider mb-0.5 block">Ordered By *</label><div class="relative"><input type="text" id="orderedBy" placeholder="Staff Name" required readonly class="w-full pl-8 pr-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-sm font-bold text-navyPrimary cursor-not-allowed"><i class="fa-regular fa-user absolute left-3 top-2.5 text-slate-400 text-xs"></i></div></div>
                     </div>
                 </div>
-                <div class="flex items-center justify-between px-1 pt-1 card-enter" style="animation-delay:0.12s"><div class="flex items-center space-x-1.5"><i class="fa-solid fa-utensils text-navyPrimary text-xs"></i><h2 class="font-bold text-navyPrimary text-xs uppercase">Food Menu</h2></div><span class="text-[11px] font-bold text-slate-400 uppercase">4 Items</span></div>
+                <div class="flex items-center justify-between px-1 pt-1 card-enter" style="animation-delay:0.12s"><div class="flex items-center space-x-1.5"><i class="fa-solid fa-utensils text-navyPrimary text-xs"></i><h2 class="font-bold text-navyPrimary text-xs uppercase">Food Menu</h2></div><span class="text-[11px] font-bold text-slate-400 uppercase">7 Items</span></div>
                 <div id="menuContainer" class="space-y-2.5"></div>
             </form>
         </div>
         <div class="text-center mt-6 mb-10"><p class="text-[11px] text-slate-400 font-light">&copy; 2026 Independence Hotel, Sihanoukville</p></div>
     </div>
 
-    <!-- EXPORT REPORT MODAL -->
+    <!-- EXPORT REPORT MODAL (Password Protected: admin@230) -->
     <div id="exportModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl animate-fade-in text-left space-y-3.5 border border-slate-100">
             <div class="flex justify-between items-center border-b border-slate-100 pb-2">
@@ -157,7 +157,7 @@
     <!-- CONFIRM MODAL -->
     <div id="confirmModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden"><div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl animate-fade-in text-center space-y-4 border border-slate-100"><div class="w-12 h-12 rounded-full bg-sky-50 text-sky-500 flex items-center justify-center mx-auto text-xl border-2 border-sky-200 shadow-md step-pulse"><i class="fa-solid fa-clipboard-check"></i></div><div><h3 id="modalTitle" class="font-extrabold text-sm text-navyPrimary uppercase tracking-wider">CONFIRM ORDER</h3></div><div id="orderSummaryBox" class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 text-left space-y-2 text-xs shadow-inner"></div><div class="space-y-2.5 pt-2"><div id="slideTrack" class="relative bg-slate-50 slide-track-glow h-14 rounded-xl overflow-hidden flex items-center px-1 select-none"><div id="slideFill" class="absolute left-0 top-0 bottom-0 bg-sky-400/25 w-0 pointer-events-none transition-all"></div><span class="absolute inset-0 flex items-center justify-center text-xs font-extrabold uppercase tracking-widest pointer-events-none slide-text-shimmer">Slide to Confirm &rarr;</span><div id="slideThumb" class="absolute left-1 top-1 bottom-1 w-12 bg-navyPrimary hover:bg-navyDark rounded-lg flex items-center justify-center text-white cursor-grab active:cursor-grabbing z-10 transition-transform shadow-[0_0_10px_rgba(56,189,248,0.6)]"><i class="fa-solid fa-angles-right text-xs"></i></div></div><button type="button" id="cancelBtn" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 rounded-xl font-bold text-xs transition-all btn-press">Cancel</button></div></div></div>
     
-    <!-- LOADING OVERLAY -->
+    <!-- LOADING OVERLAY (Sent -> Processed -> Completed) -->
     <div id="loadingOverlay" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl animate-fade-in text-center space-y-5 border border-slate-100">
             <div class="flex flex-col items-center space-y-3">
@@ -172,7 +172,6 @@
                     <div class="flex-1 h-1 bg-slate-200 mx-1 rounded-full overflow-hidden relative mt-[-15px]"><div id="line2Fill" class="absolute left-0 top-0 h-full bg-sky-500 w-0 transition-all duration-500"></div></div>
                     <div class="flex flex-col items-center space-y-1.5 z-10">
                         <div id="step3Icon" class="w-8 h-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-xs shadow-sm transition-all duration-300"><i class="fa-solid fa-check-double"></i></div>
-                        <!-- Changed "Delivered" to "Completed" -->
                         <span id="step3Text" class="text-[11px] font-bold text-slate-400 transition-colors">Completed</span>
                     </div>
                 </div>
@@ -207,7 +206,7 @@
         }
         function closeExportModal() { document.getElementById('exportModal').classList.add('hidden'); }
 
-        // Export Function (ទាញទិន្នន័យពី LocalStorage ដែលទុក ១២ខែ)
+        // Export Function (12 Months available)
         function exportData(type) {
             const branchVal = document.getElementById('exportBranch').value; 
             const startDate = document.getElementById('exportStartDate').value; 
@@ -218,16 +217,24 @@
             if (filtered.length === 0) { showAlert("ពុំមានទិន្នន័យបញ្ជាទិញតាមលក្ខខណ្ឌនេះទេ!", "NO DATA"); return; }
 
             if (type === 'sheet') {
-                let excelData = filtered.map(row => ({ "DO No": row.doNo, "Branch": row.branch, "Date": row.orderDate, "Time": row.pickupTime, "Ordered By": row.orderedBy || localStorage.getItem('starbucks_logged_user') || 'Unknown', "Egg Wrap": row.item1 || 0, "Chicken Wrap": row.item2 || 0, "Salad": row.item3 || 0, "Sandwich": row.item4 || 0, "Total Qty": row.totalQty || 0 }));
-                const worksheet = XLSX.utils.json_to_sheet(excelData); const workbook = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(workbook, worksheet, "F&B Report"); XLSX.writeFile(workbook, `Starbucks_Report_${branchVal}_${startDate}_to_${endDate}.xlsx`);
+                let excelData = filtered.map(row => ({ 
+                    "DO No": row.doNo, "Branch": row.branch, "Date": row.orderDate, "Time": row.pickupTime, "Ordered By": row.orderedBy || 'Unknown', 
+                    "Item 1": row.item1 || 0, "Item 2": row.item2 || 0, "Item 3": row.item3 || 0, "Item 4": row.item4 || 0, "Item 5": row.item5 || 0, "Item 6": row.item6 || 0, "Item 7": row.item7 || 0, 
+                    "Total Qty": row.totalQty || 0 
+                }));
+                const worksheet = XLSX.utils.json_to_sheet(excelData); const workbook = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(workbook, worksheet, "Bakery Report"); XLSX.writeFile(workbook, `Bakery_Report_${branchVal}_${startDate}_to_${endDate}.xlsx`);
                 closeExportModal(); showAlert("ទាញយកឯកសារ Excel (.xlsx) បានដោយជោគជ័យ!", "EXPORT SUCCESS");
             } else if (type === 'pdf') {
                 let printWindow = window.open('', '', 'height=900,width=1100');
-                let html = `<html><head><title>INDEPENDENCE HOTEL BY DARA - F&B REPORT</title><style>@page { size: landscape; margin: 15mm; } body { font-family: 'Plus Jakarta Sans', Arial, sans-serif; padding: 20px; color: #1e293b; background: #fff; } .header { text-align: center; margin-bottom: 25px; border-bottom: 3px solid #1B365D; padding-bottom: 12px; } h2 { color: #1B365D; margin: 0 0 6px 0; font-size: 20px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; } p { font-size: 12px; color: #475569; margin: 0; font-weight: 600; } table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 15px; } th, td { border: 1px solid #cbd5e1; padding: 9px 10px; text-align: left; } th { background-color: #1B365D !important; color: white !important; font-weight: 700; text-transform: uppercase; font-size: 10px; letter-spacing: 0.3px; -webkit-print-color-adjust: exact; print-color-adjust: exact; } tr:nth-child(even) { background-color: #f8fafc !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } td { font-weight: 500; color: #1e293b; } .footer { margin-top: 30px; display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: #0f172a; border-top: 2px solid #e2e8f0; padding-top: 15px; }</style></head><body>
-                        <div class="header"><h2>INDEPENDENCE HOTEL BY DARA - F&B REPORT</h2><p>Branch: ${branchVal} &nbsp;|&nbsp; Date Range: ${startDate} to ${endDate}</p></div>
-                        <table><thead><tr><th>DO No</th><th>Branch</th><th>Date</th><th>Time</th><th>Ordered By</th><th>Egg Wrap</th><th>Chicken Wrap</th><th>Salad</th><th>Sandwich</th><th>Total Qty</th></tr></thead><tbody>`;
+                let html = `<html><head><title>INDEPENDENCE HOTEL BY DARA - BAKERY REPORT</title><style>@page { size: landscape; margin: 15mm; } body { font-family: 'Plus Jakarta Sans', Arial, sans-serif; padding: 20px; color: #1e293b; background: #fff; } .header { text-align: center; margin-bottom: 25px; border-bottom: 3px solid #1B365D; padding-bottom: 12px; } h2 { color: #1B365D; margin: 0 0 6px 0; font-size: 20px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; } p { font-size: 12px; color: #475569; margin: 0; font-weight: 600; } table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 15px; } th, td { border: 1px solid #cbd5e1; padding: 9px 10px; text-align: left; } th { background-color: #1B365D !important; color: white !important; font-weight: 700; text-transform: uppercase; font-size: 10px; letter-spacing: 0.3px; -webkit-print-color-adjust: exact; print-color-adjust: exact; } tr:nth-child(even) { background-color: #f8fafc !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } td { font-weight: 500; color: #1e293b; } .footer { margin-top: 30px; display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: #0f172a; border-top: 2px solid #e2e8f0; padding-top: 15px; }</style></head><body>
+                        <div class="header"><h2>INDEPENDENCE HOTEL BY DARA - BAKERY REPORT</h2><p>Branch: ${branchVal} &nbsp;|&nbsp; Date Range: ${startDate} to ${endDate}</p></div>
+                        <table><thead><tr><th>DO No</th><th>Branch</th><th>Date</th><th>Time</th><th>Ordered By</th><th>Item 1</th><th>Item 2</th><th>Item 3</th><th>Item 4</th><th>Item 5</th><th>Item 6</th><th>Item 7</th><th>Total Qty</th></tr></thead><tbody>`;
                 let grandTotalQty = 0;
-                filtered.forEach(row => { grandTotalQty += Number(row.totalQty); let staff = row.orderedBy || localStorage.getItem('starbucks_logged_user') || 'Unknown'; html += `<tr><td><b>${row.doNo}</b></td><td>${row.branch}</td><td>${row.orderDate}</td><td>${row.pickupTime}</td><td>${staff}</td><td>${row.item1 || 0}</td><td>${row.item2 || 0}</td><td>${row.item3 || 0}</td><td>${row.item4 || 0}</td><td><b>${row.totalQty || 0}</b></td></tr>`; });
+                filtered.forEach(row => { 
+                    grandTotalQty += Number(row.totalQty); 
+                    let staff = row.orderedBy || 'Unknown'; 
+                    html += `<tr><td><b>${row.doNo}</b></td><td>${row.branch}</td><td>${row.orderDate}</td><td>${row.pickupTime}</td><td>${staff}</td><td>${row.item1||0}</td><td>${row.item2||0}</td><td>${row.item3||0}</td><td>${row.item4||0}</td><td>${row.item5||0}</td><td>${row.item6||0}</td><td>${row.item7||0}</td><td><b>${row.totalQty || 0}</b></td></tr>`; 
+                });
                 html += `</tbody></table><div class="footer"><span>Total Orders: ${filtered.length} records</span><span>Grand Total Quantity: ${grandTotalQty} units</span></div></body></html>`;
                 printWindow.document.write(html); printWindow.document.close(); printWindow.focus(); setTimeout(() => { printWindow.print(); }, 600); closeExportModal();
             }
@@ -259,7 +266,6 @@
         function handleLogout() { showConfirm("តើអ្នកពិតជាចង់ចាកចេញ (Logout) មែនទេ?", () => { localStorage.removeItem('starbucks_logged_user'); window.location.reload(); }, "CONFIRM LOGOUT"); }
         window.addEventListener('DOMContentLoaded', checkAuth);
 
-        // កំណត់រក្សាទុកទិន្នន័យ ១២ ខែ ក្នុង Local Storage សម្រាប់ Export ប្រើប្រាស់
         const ONE_YEAR_MS = 365 * 24 * 60 * 60 * 1000; 
 
         function fetchCloudHistory(e) {
@@ -278,23 +284,13 @@
                 }).catch(err => { renderOrderHistory(); if (e) showAlert("Sync failed. Check internet connection!", "ERROR"); });
         }
 
-        function saveOrderToHistory(orderData) {
-            let history = JSON.parse(localStorage.getItem('stb_order_history') || '[]'); const now = new Date().getTime();
-            history = history.filter(item => now - (item.timestamp || now) < ONE_YEAR_MS);
-            const existingIndex = history.findIndex(item => item.doNo && item.doNo === orderData.doNo);
-            if (existingIndex !== -1) history[existingIndex] = orderData; else history.unshift(orderData);
-            localStorage.setItem('stb_order_history', JSON.stringify(history)); renderOrderHistory();
-        }
-
-        // 🟢 Recently Order (2 Hours Display Only)
+        // 🟢 RECENTLY ORDER (Display last 2 hours, NO EDIT BUTTON)
         function renderOrderHistory() {
             const container = document.getElementById('historyListContainer'); const badge = document.getElementById('historyCountBadge');
             let history = JSON.parse(localStorage.getItem('stb_order_history') || '[]'); const now = new Date().getTime();
             
-            // រក្សាទុក ១២ ខែក្នុង Cache ដើម្បីឱ្យ Export អាចប្រើប្រាស់បាន
             history = history.filter(item => now - (item.timestamp || now) < ONE_YEAR_MS); localStorage.setItem('stb_order_history', JSON.stringify(history));
 
-            // ប៉ុន្តែបង្ហាញលើ UI តែ ២ម៉ោងចុងក្រោយប៉ុណ្ណោះ
             const TWO_HOURS = 2 * 60 * 60 * 1000;
             let displayHistory = history.filter(item => now - (item.timestamp || now) < TWO_HOURS);
 
@@ -302,13 +298,9 @@
             badge.innerText = `${displayHistory.length} ord`; let html = '';
             
             displayHistory.forEach((ord) => {
-                let updateBadgeHTML = '';
-                if (ord.updateVersion && ord.updateVersion > 1) { 
-                    updateBadgeHTML = `<span class="text-amber-600 font-extrabold text-[9px] block mt-0.5"><i class="fa-solid fa-clock-rotate-left mr-1"></i>Updated in Sheet: V${ord.updateVersion} (${ord.updateTime || ''})</span>`; 
-                }
                 let statusHTML = `<span class="text-[9px] text-emerald-600 font-bold bg-emerald-50 border border-emerald-100 px-1.5 py-1 rounded whitespace-nowrap"><i class="fa-solid fa-cloud-check mr-1"></i>Synced</span>`;
                 
-                html += `<div class="bg-white p-2 rounded-lg border border-sky-100 flex justify-between items-center shadow-xs text-[11px]"><div><p class="font-extrabold text-navyPrimary">${ord.doNo} <span class="text-[9px] text-slate-500 font-normal">(${ord.branch})</span></p><p class="text-[9px] text-slate-500">Date: ${ord.orderDate} | Qty: <span class="font-bold text-sky-600">${ord.totalQty}</span></p>${updateBadgeHTML}</div><div>${statusHTML}</div></div>`;
+                html += `<div class="bg-white p-2 rounded-lg border border-sky-100 flex justify-between items-center shadow-xs text-[11px]"><div><p class="font-extrabold text-navyPrimary">${ord.doNo} <span class="text-[9px] text-slate-500 font-normal">(${ord.branch})</span></p><p class="text-[9px] text-slate-500">Date: ${ord.orderDate} | Qty: <span class="font-bold text-sky-600">${ord.totalQty}</span></p></div><div>${statusHTML}</div></div>`;
             });
             container.innerHTML = html;
         }
@@ -317,19 +309,29 @@
         for (let m = 0; m < 24 * 60; m += 5) { let totalMinutes = (330 + m) % (24 * 60); let i = Math.floor(totalMinutes / 60); let j = totalMinutes % 60; let hour = i % 12 || 12; let ampm = i < 12 ? 'AM' : 'PM'; let min = j < 10 ? '0' + j : j; let displayHour = hour < 10 ? '0' + hour : hour; optionsHTML += `<option value="${displayHour}:${min} ${ampm}">`; }
         timeDatalist.innerHTML = optionsHTML;
 
-        const bakeryItems = [{ id: 'item1', name: 'Egg Salad Wrap', price: 0, emoji: '🥚' }, { id: 'item2', name: 'Chicken Salad Wrap', price: 0, emoji: '🍗' }, { id: 'item3', name: 'Salad Wrapped', price: 0, emoji: '🥗' }, { id: 'item4', name: 'Fresh Sandwich', price: 0, emoji: '🥪' }];
+        // 7 Bakery Items configuration matching GS code (Item 1 to Item 7)
+        const bakeryItems = [
+            { id: 'item1', name: 'Plain Croissant', emoji: '🥐' }, 
+            { id: 'item2', name: 'Chocolate Croissant', emoji: '🍫' }, 
+            { id: 'item3', name: 'Almond Croissant', emoji: '🍞' }, 
+            { id: 'item4', name: 'Butter Toast', emoji: '🧈' },
+            { id: 'item5', name: 'Blueberry Muffin', emoji: '🧁' },
+            { id: 'item6', name: 'Chocolate Muffin', emoji: '🥮' },
+            { id: 'item7', name: 'Cinnamon Roll', emoji: '🍩' }
+        ];
+
         const menuContainer = document.getElementById('menuContainer'); const quantities = {};
         bakeryItems.forEach((item, idx) => {
             quantities[item.id] = 0; const card = document.createElement('div');
             card.className = "bg-cardWhite p-3 rounded-xl shadow-sm border border-slate-200/80 flex justify-between items-center menu-card card-enter"; card.style.animationDelay = (0.18 + idx * 0.07) + 's';
-            card.innerHTML = `<div class="flex items-center space-x-3 flex-1 pr-2"><div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center shrink-0 border border-blue-100 shadow-sm text-base"><span class="emoji-icon">${item.emoji}</span></div><h3 class="font-bold text-sm text-slate-900">${item.name}</h3></div><div class="flex items-center space-x-1.5 bg-slate-50 rounded-lg p-1 border border-slate-200"><button type="button" class="qty-btn px-2.5 h-7 flex items-center justify-center text-slate-500 bg-white rounded-md shadow-sm border border-slate-200 btn-press font-bold text-xs" onclick="updateQty('${item.id}', -10, ${item.price})">-10</button><input type="number" id="qty-${item.id}" value="0" min="0" class="font-black text-navyDark w-10 text-center text-base bg-transparent focus:outline-none" oninput="manualInputQty('${item.id}', this.value, ${item.price})"><button type="button" class="qty-btn px-2.5 h-7 flex items-center justify-center text-slate-500 bg-white rounded-md shadow-sm border border-slate-200 btn-press font-bold text-xs" onclick="updateQty('${item.id}', 10, ${item.price})">+10</button></div>`;
+            card.innerHTML = `<div class="flex items-center space-x-3 flex-1 pr-2"><div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center shrink-0 border border-blue-100 shadow-sm text-base"><span class="emoji-icon">${item.emoji}</span></div><h3 class="font-bold text-sm text-slate-900">${item.name}</h3></div><div class="flex items-center space-x-1.5 bg-slate-50 rounded-lg p-1 border border-slate-200"><button type="button" class="qty-btn px-2.5 h-7 flex items-center justify-center text-slate-500 bg-white rounded-md shadow-sm border border-slate-200 btn-press font-bold text-xs" onclick="updateQty('${item.id}', -10)">-10</button><input type="number" id="qty-${item.id}" value="0" min="0" class="font-black text-navyDark w-10 text-center text-base bg-transparent focus:outline-none" oninput="manualInputQty('${item.id}', this.value)"><button type="button" class="qty-btn px-2.5 h-7 flex items-center justify-center text-slate-500 bg-white rounded-md shadow-sm border border-slate-200 btn-press font-bold text-xs" onclick="updateQty('${item.id}', 10)">+10</button></div>`;
             menuContainer.appendChild(card);
         });
 
-        let totalQty = 0; let totalAmount = 0.00;
+        let totalQty = 0; 
         function animateTotal() { const el = document.getElementById('totalQtyDisplay'); el.classList.remove('num-flip'); void el.offsetWidth; el.classList.add('num-flip'); el.innerText = totalQty; }
-        window.updateQty = function(id, change, price) { let newQty = Math.max(0, quantities[id] + change); let actualChange = newQty - quantities[id]; quantities[id] = newQty; const input = document.getElementById(`qty-${id}`); input.value = newQty; input.classList.remove('qty-pop'); void input.offsetWidth; input.classList.add('qty-pop'); totalQty += actualChange; totalAmount += (actualChange * price); animateTotal(); };
-        window.manualInputQty = function(id, val, price) { let parsedVal = Math.max(0, parseInt(val) || 0); let diff = parsedVal - quantities[id]; quantities[id] = parsedVal; totalQty += diff; totalAmount += (diff * price); animateTotal(); };
+        window.updateQty = function(id, change) { let newQty = Math.max(0, quantities[id] + change); let actualChange = newQty - quantities[id]; quantities[id] = newQty; const input = document.getElementById(`qty-${id}`); input.value = newQty; input.classList.remove('qty-pop'); void input.offsetWidth; input.classList.add('qty-pop'); totalQty += actualChange; animateTotal(); };
+        window.manualInputQty = function(id, val) { let parsedVal = Math.max(0, parseInt(val) || 0); let diff = parsedVal - quantities[id]; quantities[id] = parsedVal; totalQty += diff; animateTotal(); };
 
         let tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1); document.getElementById('orderDate').valueAsDate = tomorrow;
         if (localStorage.getItem('stb_branch')) document.getElementById('branch').value = localStorage.getItem('stb_branch');
@@ -379,7 +381,12 @@
 
             const currentBranch = document.getElementById('branch').value; const currentOrderDate = document.getElementById('orderDate').value; const currentPickupTime = document.getElementById('pickupTime').value; let currentOrderedBy = document.getElementById('orderedBy').value.trim() || localStorage.getItem('starbucks_logged_user') || 'Staff';
             
-            const data = { doNo: "", branch: currentBranch, orderDate: currentOrderDate, item1: quantities['item1'] || 0, item2: quantities['item2'] || 0, item3: quantities['item3'] || 0, item4: quantities['item4'] || 0, pickupTime: currentPickupTime, orderedBy: currentOrderedBy, totalQty: totalQty };
+            const data = { 
+                branch: currentBranch, orderDate: currentOrderDate, 
+                item1: quantities['item1'] || 0, item2: quantities['item2'] || 0, item3: quantities['item3'] || 0, 
+                item4: quantities['item4'] || 0, item5: quantities['item5'] || 0, item6: quantities['item6'] || 0, item7: quantities['item7'] || 0, 
+                pickupTime: currentPickupTime, orderedBy: currentOrderedBy 
+            };
 
             fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(() => {
                 setTimeout(() => {
