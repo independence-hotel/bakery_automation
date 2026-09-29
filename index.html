@@ -1,1293 +1,394 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
-    <title>Brown Coffee Order App</title>
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Brown Order">
-    <meta name="theme-color" content="#1B365D">
-    <link rel="icon" type="image/png" href="logo.png">
-    <link rel="apple-touch-icon" href="logo.png">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: { extend: { fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
-            colors: { navyPrimary: '#1B365D', navyDark: '#0A192F', cardWhite: '#FFFFFF' } } }
-        }
-    </script>
-    <style>
-        body { -webkit-tap-highlight-color: transparent; background-color: #e2e8f0; touch-action: manipulation; }
-        ::-webkit-scrollbar { width: 0; background: transparent; }
-        input[type="number"]::-webkit-inner-spin-button,
-        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-        .btn-press:active { transform: scale(0.95); transition: transform 0.12s ease; }
-        .app-container { max-width: 430px; margin: 0 auto; min-height: 100vh; background: #F8FAFC; box-shadow: 0 10px 25px -5px rgba(0,0,0,.1); }
-        @keyframes shimmer { 0%{transform:translateX(-120%)} 100%{transform:translateX(220%)} }
-        .hdr-shine::before { content:''; position:absolute; inset:0; background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.08) 50%,transparent 60%); animation:shimmer 3.5s infinite ease-in-out; pointer-events:none; }
-        @keyframes slideUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
-        .card-enter { animation:slideUp .38s cubic-bezier(.16,1,.3,1) forwards; opacity:0; }
-        @keyframes fadeScale { from{opacity:0;transform:scale(.92) translateY(8px)} to{opacity:1;transform:scale(1) translateY(0)} }
-        .fade-in { animation:fadeScale .28s cubic-bezier(.16,1,.3,1) forwards; }
-        @keyframes qtyPop { 0%{transform:scale(1)} 40%{transform:scale(1.35);color:#1B365D} 100%{transform:scale(1)} }
-        .qty-pop { animation:qtyPop .22s ease; }
-        .menu-card { transition:box-shadow .2s,transform .2s; }
-        .menu-card:hover { box-shadow:0 6px 18px rgba(27,54,93,.1); transform:translateY(-1px); }
-        .emoji-icon { transition:transform .2s cubic-bezier(.34,1.56,.64,1); display:inline-block; }
-        .menu-card:hover .emoji-icon { transform:scale(1.18) rotate(-4deg); }
-        .qty-btn { transition:background .15s,color .15s; }
-        .qty-btn:hover { background:#F0F9FF !important; color:#1B365D; border-color:#38BDF8; }
-        @keyframes footerIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
-        .footer-bar { animation:footerIn .5s .3s cubic-bezier(.16,1,.3,1) both; }
-        @keyframes numFlip { 0%{transform:translateY(-8px);opacity:0} 100%{transform:translateY(0);opacity:1} }
-        .num-flip { animation:numFlip .18s ease forwards; }
-        @keyframes pulseGlow { 0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(56,189,248,.4);border-color:rgba(56,189,248,.5)} 50%{transform:scale(1.05);box-shadow:0 0 18px 5px rgba(56,189,248,.5);border-color:rgba(56,189,248,1)} }
-        .step-pulse { animation:pulseGlow 1.8s infinite ease-in-out; }
-        /* ── Slide to Confirm ── */
-        .slide-track {
-            background: linear-gradient(135deg, #0A192F 0%, #1B365D 60%, #0f2a4a 100%);
-            border: 1.5px solid rgba(56,189,248,0.45);
-            box-shadow: 0 0 0 3px rgba(56,189,248,0.12), 0 4px 24px rgba(10,25,47,0.45), inset 0 1px 0 rgba(255,255,255,0.06);
-            border-radius: 16px; position: relative; overflow: hidden;
-        }
-        @keyframes borderPulse {
-            0%,100% { box-shadow: 0 0 0 3px rgba(56,189,248,0.12), 0 4px 24px rgba(10,25,47,0.45), 0 0 18px rgba(56,189,248,0.18); border-color: rgba(56,189,248,0.45); }
-            50%      { box-shadow: 0 0 0 4px rgba(56,189,248,0.28), 0 4px 32px rgba(10,25,47,0.55), 0 0 32px rgba(56,189,248,0.38); border-color: rgba(56,189,248,0.85); }
-        }
-        .slide-track { animation: borderPulse 2.2s ease-in-out infinite; }
-        @keyframes scanLine { 0%{ transform: translateX(-100%); } 100% { transform: translateX(400%); } }
-        .slide-track::before {
-            content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 28%;
-            background: linear-gradient(90deg, transparent, rgba(56,189,248,0.10), rgba(56,189,248,0.18), rgba(255,255,255,0.07), transparent);
-            animation: scanLine 2.4s ease-in-out infinite; pointer-events: none; z-index: 1;
-        }
-        @keyframes arrowMarquee { 0%,100% { letter-spacing: 0.18em; opacity: 0.72; } 50% { letter-spacing: 0.28em; opacity: 1; } }
-        .slide-label {
-            position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-            font-size: 11px; font-weight: 800; color: rgba(255,255,255,0.82); letter-spacing: 0.18em; text-transform: uppercase;
-            pointer-events: none; z-index: 2; text-shadow: 0 0 12px rgba(56,189,248,0.6); animation: arrowMarquee 2s ease-in-out infinite; user-select: none;
-        }
-        .slide-fill {
-            position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, rgba(56,189,248,0.18), rgba(56,189,248,0.32));
-            pointer-events: none; transition: width 0.05s linear; z-index: 0;
-        }
-        @keyframes thumbPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(56,189,248,0.5), 0 2px 8px rgba(0,0,0,0.4); } 50% { box-shadow: 0 0 0 6px rgba(56,189,248,0.18), 0 2px 12px rgba(0,0,0,0.5); } }
-        .slide-thumb {
-            position: absolute; left: 5px; top: 5px; bottom: 5px; width: 52px; background: linear-gradient(145deg, #1e4a7a, #1B365D); border-radius: 11px;
-            display: flex; align-items: center; justify-content: center; color: #fff; cursor: grab; z-index: 10; border: 1px solid rgba(56,189,248,0.5);
-            animation: thumbPulse 2.2s ease-in-out infinite; transition: background 0.2s;
-        }
-        .slide-thumb:active { cursor: grabbing; background: linear-gradient(145deg, #255a92, #1B365D); }
-        .slide-thumb i { font-size: 16px; color: #38BDF8; filter: drop-shadow(0 0 6px rgba(56,189,248,0.9)); }
-        @keyframes arrowChase { 0% { opacity:0.15; transform:translateX(-2px); } 50% { opacity:1; transform:translateX(0px); } 100% { opacity:0.15; transform:translateX(2px); } }
-        .arr-active i:nth-child(1){ animation:arrowChase .7s .00s infinite; color:#38BDF8 !important; }
-        .arr-active i:nth-child(2){ animation:arrowChase .7s .15s infinite; color:#38BDF8 !important; }
-        .arr-active i:nth-child(3){ animation:arrowChase .7s .30s infinite; color:#38BDF8 !important; }
-        .arr-active i:nth-child(4){ animation:arrowChase .7s .45s infinite; color:#38BDF8 !important; }
-        .arr-done i { color:#22C55E !important; opacity:1; }
-        @keyframes stepGlow { 0%,100% { box-shadow:0 0 0 0 rgba(56,189,248,0); } 50% { box-shadow:0 0 30px 14px rgba(56,189,248,0.42); } }
-        .s-glow { animation:stepGlow 1.6s ease-in-out infinite; }
-        @keyframes clockTick { 0% { transform:rotate(0deg); } 100% { transform:rotate(360deg); } }
-        .clock-spin { animation:clockTick 2.4s linear infinite; display:inline-block; }
-        @keyframes modalDrop { from { opacity:0; transform: scale(0.88) translateY(-16px); } to { opacity:1; transform: scale(1) translateY(0); } }
-        .modal-card { animation: modalDrop 0.32s cubic-bezier(0.16,1,0.3,1) forwards; }
-        .modal-backdrop { background: rgba(10,25,47,0.82); backdrop-filter: blur(6px); }
-        .icon-ring-blue   { background:#EFF8FF; border:2px solid #BAE6FD; color:#0284C7; }
-        .icon-ring-green  { background:#F0FDF4; border:2px solid #BBF7D0; color:#16A34A; }
-        .icon-ring-amber  { background:#FFFBEB; border:2px solid #FDE68A; color:#D97706; }
-        .icon-ring-red    { background:#FEF2F2; border:2px solid #FECACA; color:#DC2626; }
-        .modal-title { position:relative; padding-bottom:8px; }
-        .modal-title::after { content:''; position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:36px; height:2px; background:linear-gradient(90deg,#38BDF8,#1B365D); border-radius:2px; }
-        .btn-navy { background: linear-gradient(135deg,#1B365D,#0f2a4a); transition: all 0.18s; }
-        .btn-navy:hover { background: linear-gradient(135deg,#254d80,#1B365D); box-shadow:0 4px 14px rgba(27,54,93,0.4); }
-        .btn-navy:active { transform:scale(0.97); }
-        .field-err { display:none; font-size:11px; color:#ef4444; font-weight:600; margin-top:3px; }
-        .field-err.show { display:block; }
-        input.err-border, select.err-border { border-color:#ef4444 !important; }
-        @keyframes retryPulse { 0%,100%{opacity:1} 50%{opacity:.5} }
-        .retry-badge { animation:retryPulse 2s infinite; }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Bakery Order</title>
+  <style>
+    body{font-family:Arial,sans-serif;background:#f4f7fb;color:#172033;margin:0}
+    main{max-width:780px;margin:24px auto;padding:0 16px}
+    .card{background:#fff;border:1px solid #dce3ee;border-radius:12px;padding:20px;margin:14px 0}
+    h1{color:#153d67} h2{font-size:18px}
+    label{display:block;font-size:13px;font-weight:bold;margin:10px 0 5px}
+    input,select,button{font:inherit;box-sizing:border-box}
+    input,select{width:100%;padding:10px;border:1px solid #bfc9d8;border-radius:7px}
+    button{padding:10px 14px;border:0;border-radius:7px;background:#153d67;color:#fff;font-weight:bold;cursor:pointer;margin:10px 5px 0 0}
+    button.secondary{background:#64748b}.hidden{display:none}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+    .items{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+    .item{border:1px solid #dce3ee;border-radius:8px;padding:10px}
+    .row{padding:10px 0;border-bottom:1px solid #e5eaf1}
+    .error{color:#b42318}.success{color:#147a42}.muted{color:#64748b;font-size:13px}
+  </style>
 </head>
-<body class="font-sans text-slate-800 text-sm">
+<body>
+<main>
+  <h1>Bakery Order</h1>
 
-<!-- ═══════════════════════════ LOGIN SCREEN ═══════════════════════════ -->
-<div id="loginScreen" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-4">
-  <div class="app-container w-full bg-slate-50 flex flex-col justify-between p-6 text-center relative overflow-hidden shadow-2xl" style="max-height:100vh;">
-    <div class="bg-navyPrimary text-white -mx-6 -mt-6 p-6 rounded-b-3xl shadow-md relative overflow-hidden hdr-shine">
-      <div class="bg-white p-2 rounded-xl inline-block mb-2 shadow-md border border-slate-200">
-        <img src="logo.png" alt="Hotel Logo" class="h-14 w-auto mx-auto object-contain" onerror="this.src='Logo PNG-white.png'">
-      </div>
-      <h1 class="text-sm font-extrabold tracking-widest uppercase">INDEPENDENCE HOTEL BY DARA</h1>
-      <p class="text-slate-300 text-xs mt-0.5 font-medium">F&B — SMART ORDER PORTAL</p>
-    </div>
-    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 space-y-3.5 text-left relative z-10 my-auto shadow-lg card-enter">
-      <div class="flex items-center space-x-2 border-b border-slate-100 pb-2">
-        <i class="fa-solid fa-lock text-navyPrimary text-xs"></i>
-        <h3 class="font-bold text-navyPrimary text-xs uppercase tracking-wider">Staff Login</h3>
+  <section id="loginCard" class="card">
+    <h2>Sign in</h2>
+
+    <div class="grid">
+      <div>
+        <label>Name</label>
+        <input id="name" maxlength="80">
       </div>
       <div>
-        <label class="text-[11px] text-slate-500 font-bold uppercase tracking-wider mb-1 block">Full Name *</label>
-        <div class="relative">
-          <input type="text" id="loginFullName" placeholder="Enter your full name" autocomplete="name"
-            class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-navyPrimary transition-all"
-            oninput="clearFieldErr('loginFullName','errName')">
-          <i class="fa-regular fa-user absolute left-3 top-3.5 text-slate-400 text-xs"></i>
-        </div>
-        <p class="field-err" id="errName">សូមបញ្ចូលឈ្មោះពេញ</p>
+        <label>Phone</label>
+        <input id="phone" inputmode="numeric" maxlength="12">
       </div>
-      <div>
-        <label class="text-[11px] text-slate-500 font-bold uppercase tracking-wider mb-1 block">Phone Number *</label>
-        <div class="relative">
-          <input type="tel" id="loginPhone" placeholder="e.g. 012 345 678" autocomplete="tel"
-            class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-navyPrimary transition-all"
-            oninput="clearFieldErr('loginPhone','errPhone')">
-          <i class="fa-solid fa-phone absolute left-3 top-3.5 text-slate-400 text-xs"></i>
-        </div>
-        <p class="field-err" id="errPhone">លេខទូរស័ព្ទត្រូវ ៨–១០ ខ្ទង់ (0-9)</p>
-      </div>
-      <button type="button" onclick="submitLogin()"
-        class="w-full bg-navyPrimary hover:bg-navyDark text-white font-bold py-3 rounded-xl shadow-md transition-all btn-press text-sm flex items-center justify-center space-x-2">
-        <span>LOGIN TO SYSTEM</span>
-        <i class="fa-solid fa-arrow-right-to-bracket text-xs"></i>
-      </button>
     </div>
-    <p class="text-[11px] text-slate-400 font-light pb-2">&copy; 2026 INDEPENDENCE HOTEL — SIHANOUKVILLE</p>
-  </div>
-</div>
 
-<!-- ═══════════════════════════ MAIN APP ═══════════════════════════ -->
-<div class="app-container flex flex-col pb-28">
-  <div class="bg-navyPrimary text-center py-4 px-3 shadow-md rounded-b-2xl mb-3 relative overflow-hidden hdr-shine">
-    <div class="flex justify-between items-center px-2 mb-2">
-      <div class="bg-white/10 px-2.5 py-1 rounded-lg text-white text-[11px] font-semibold flex items-center space-x-1.5 backdrop-blur-sm">
-        <i class="fa-solid fa-user-shield text-sky-400 text-xs"></i>
-        <span id="loggedInUserDisplay">Staff</span>
-      </div>
-      <div id="offlineBadge" class="hidden retry-badge bg-amber-500/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center space-x-1">
-        <i class="fa-solid fa-wifi-slash text-[9px]"></i><span id="offlineCount">0</span><span>pending</span>
-      </div>
-      <button type="button" onclick="handleLogout()"
-        class="text-slate-300 hover:text-white text-xs font-bold px-2.5 py-1 rounded-lg bg-white/10 hover:bg-red-500/80 transition-all">
-        <i class="fa-solid fa-right-from-bracket mr-1"></i> Logout
-      </button>
-    </div>
-    <div class="bg-white p-1.5 rounded-xl inline-block mb-2 shadow-md border border-slate-200">
-      <img src="logo.png" alt="Logo" class="h-14 w-auto mx-auto object-contain" onerror="this.src='Logo PNG-white.png'">
-    </div>
-    <h1 class="text-white text-sm font-extrabold tracking-widest uppercase">INDEPENDENCE HOTEL BY DARA</h1>
-    <p class="text-slate-300 text-xs mt-0.5 font-semibold tracking-wider">F&B — SMART ORDER PORTAL</p>
-  </div>
+    <label>Access password</label>
+    <input id="accessPassword" type="password">
 
-  <div class="px-3 mb-3">
-    <div class="bg-sky-50 border border-sky-200 p-2.5 rounded-xl shadow-sm">
-      <div class="flex justify-between items-center select-none">
-        <span class="text-[11px] font-extrabold text-navyPrimary uppercase tracking-tight flex items-center cursor-pointer shrink-0" onclick="toggleHistory()">
-          <i class="fa-solid fa-clock-rotate-left text-sky-500 mr-1.5 text-xs"></i> RECENTLY ORDER
-        </span>
-        <div class="flex items-center space-x-1.5">
-          <button type="button" onclick="fetchCloud(event)"
-            class="text-[9px] text-white font-bold bg-sky-600 px-1.5 py-0.5 rounded hover:bg-sky-700 whitespace-nowrap">
-            <i class="fa-solid fa-rotate mr-0.5"></i> Sync
-          </button>
-          <button type="button" onclick="openExport(event)"
-            class="text-[9px] text-sky-700 font-bold bg-sky-200 px-1.5 py-0.5 rounded hover:bg-sky-300 whitespace-nowrap">
-            <i class="fa-solid fa-file-arrow-down mr-0.5"></i> Export
-          </button>
-          <span id="histBadge" class="bg-sky-200 text-navyPrimary text-[9px] font-bold px-2 py-0.5 rounded-full cursor-pointer" onclick="toggleHistory()">0 ord</span>
-          <i id="histChevron" class="fa-solid fa-chevron-down text-[10px] text-navyPrimary transition-transform duration-300 cursor-pointer" onclick="toggleHistory()"></i>
-        </div>
-      </div>
-      <div id="histContainer" class="space-y-1.5 max-h-48 overflow-y-auto text-xs mt-2 hidden"></div>
-    </div>
-  </div>
+    <button onclick="signIn()">Sign in</button>
+    <p id="loginMessage" class="error"></p>
+  </section>
 
-  <form id="orderForm" class="px-3 space-y-3" novalidate>
-    <div class="bg-cardWhite p-3.5 rounded-xl shadow-sm border border-slate-200/80 space-y-2.5 card-enter" style="animation-delay:.05s">
-      <div class="flex items-center space-x-1.5 border-b border-slate-100 pb-1.5">
-        <i class="fa-solid fa-store text-navyPrimary text-xs"></i>
-        <h2 class="font-bold text-navyPrimary text-xs uppercase">Outlet & Schedule</h2>
-      </div>
-      <div>
-        <label class="text-[11px] text-slate-500 font-bold uppercase tracking-wider mb-0.5 block">Select Branch *</label>
-        <div class="relative">
-          <select id="branch" class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm appearance-none font-semibold text-slate-700 transition-all"
-            onchange="clearFieldErr('branch','errBranch'); localStorage.setItem('stb_branch',this.value)">
-            <option value="">Select Branch...</option>
-            <option value="BROWN - Independence Beach">BROWN - Independence Beach</option>
-            <option value="BROWN - Island View (R9)">BROWN - Island View (R9)</option>
-            <option value="BROWN - Seaview">BROWN - Seaview</option>
-          </select>
-          <i class="fa-solid fa-location-dot absolute left-3 top-2.5 text-slate-400 text-xs"></i>
-          <i class="fa-solid fa-chevron-down absolute right-3 top-3 text-slate-400 text-xs pointer-events-none"></i>
-        </div>
-        <p class="field-err" id="errBranch">សូមជ្រើសសាខា</p>
-      </div>
-      <div class="grid grid-cols-2 gap-2.5">
+  <section id="app" class="hidden">
+    <section class="card">
+      <p id="user" class="muted"></p>
+      <h2>New order</h2>
+
+      <div class="grid">
         <div>
-          <label class="text-[11px] text-slate-500 font-bold uppercase tracking-wider mb-0.5 block">Order Date *</label>
-          <div class="relative">
-            <input type="date" id="orderDate"
-              class="w-full pl-7 pr-2 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 transition-all"
-              onchange="clearFieldErr('orderDate','errDate')">
-            <i class="fa-regular fa-calendar absolute left-2.5 top-2.5 text-slate-400 text-xs"></i>
-          </div>
-          <p class="field-err" id="errDate">ថ្ងៃ Order ត្រូវ ≥ ថ្ងៃនេះ</p>
+          <label>Branch</label>
+          <select id="branch"></select>
         </div>
         <div>
-          <label class="text-[11px] text-slate-500 font-bold uppercase tracking-wider mb-0.5 block">Pickup Time *</label>
-          <div class="relative">
-            <input type="text" id="pickupTime" list="timeOptions" placeholder="05:30 AM" autocomplete="off"
-              class="w-full pl-7 pr-2 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 transition-all"
-              oninput="clearFieldErr('pickupTime','errTime')" onblur="validateTime()">
-            <datalist id="timeOptions"></datalist>
-            <i class="fa-regular fa-clock absolute left-2.5 top-2.5 text-slate-400 text-xs"></i>
-          </div>
-          <p class="field-err" id="errTime">Format: HH:MM AM/PM</p>
-        </div>
-      </div>
-      <div>
-        <label class="text-[11px] text-slate-500 font-bold uppercase tracking-wider mb-0.5 block">Ordered By</label>
-        <div class="relative">
-          <input type="text" id="orderedBy" readonly
-            class="w-full pl-8 pr-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-sm font-bold text-navyPrimary cursor-not-allowed">
-          <i class="fa-regular fa-user absolute left-3 top-2.5 text-slate-400 text-xs"></i>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── Menu Items Container ── -->
-    <div class="flex items-center justify-between px-1 pt-1 card-enter" style="animation-delay:.12s">
-      <div class="flex items-center space-x-1.5">
-        <i class="fa-solid fa-utensils text-navyPrimary text-xs"></i>
-        <h2 class="font-bold text-navyPrimary text-xs uppercase">Food Menu</h2>
-      </div>
-      <span class="text-[11px] font-bold text-slate-400 uppercase">7 Items</span>
-    </div>
-    
-    <div id="menuContainer" class="space-y-2.5">
-      <!-- Items generated by JS -->
-    </div>
-    
-    <!-- Toggle Show More/Less Button -->
-    <button type="button" id="btnToggleMenu" onclick="toggleMenuItems()" class="w-full py-2.5 mt-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-sky-600 hover:bg-slate-50 transition-all shadow-sm flex items-center justify-center space-x-1.5">
-        <span>View More Items</span>
-        <i class="fa-solid fa-chevron-down text-[10px]"></i>
-    </button>
-
-    <div id="qtyWarn" class="hidden bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 text-[11px] text-amber-700 font-semibold flex items-center space-x-2 mt-2">
-      <i class="fa-solid fa-triangle-exclamation"></i>
-      <span>សរុប Qty ច្រើន — សូមពិនិត្យ ។</span>
-    </div>
-
-  </form>
-
-  <div class="text-center mt-6 mb-10">
-    <p class="text-[11px] text-slate-400">&copy; 2026 Independence Hotel, Sihanoukville</p>
-  </div>
-</div>
-
-<!-- ═══════════════════════════ EXPORT MODAL ═══════════════════════════ -->
-<div id="exportModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-  <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl fade-in text-left space-y-3.5 border border-slate-100">
-    <div class="flex justify-between items-center border-b border-slate-100 pb-2">
-      <h3 class="font-extrabold text-sm text-navyPrimary uppercase tracking-wider">
-        <i class="fa-solid fa-file-excel text-emerald-600 mr-1.5"></i> Export Report
-      </h3>
-      <button type="button" onclick="closeExport()" class="text-slate-400 hover:text-slate-600">
-        <i class="fa-solid fa-xmark text-sm"></i>
-      </button>
-    </div>
-    <div class="space-y-3 text-xs">
-      <div>
-        <label class="font-bold text-slate-600 block mb-1">Branch</label>
-        <select id="expBranch" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg font-semibold text-slate-700">
-          <option value="ALL">ALL BRANCHES</option>
-        </select>
-      </div>
-      <div class="grid grid-cols-2 gap-2">
-        <div>
-          <label class="font-bold text-slate-600 block mb-1">Start Date *</label>
-          <input type="date" id="expStart" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg font-semibold text-slate-700"
-            onchange="validateExportDates()">
+          <label>Order date</label>
+          <input id="orderDate" type="date">
         </div>
         <div>
-          <label class="font-bold text-slate-600 block mb-1">End Date *</label>
-          <input type="date" id="expEnd" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg font-semibold text-slate-700"
-            onchange="validateExportDates()">
+          <label>Pickup time</label>
+          <input id="pickupTime" placeholder="08:30 AM">
         </div>
       </div>
-      <p class="field-err" id="errExportDate">End Date ត្រូវ ≥ Start Date</p>
-    </div>
-    <div class="grid grid-cols-2 gap-2.5 pt-1">
-      <button type="button" onclick="doExport('sheet')"
-        class="bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl font-bold text-xs btn-press shadow-md flex items-center justify-center space-x-1">
-        <i class="fa-solid fa-file-excel"></i><span>Excel</span>
-      </button>
-      <button type="button" onclick="doExport('pdf')"
-        class="bg-navyPrimary hover:bg-navyDark text-white py-2.5 rounded-xl font-bold text-xs btn-press shadow-md flex items-center justify-center space-x-1">
-        <i class="fa-solid fa-file-pdf"></i><span>PDF Print</span>
-      </button>
-    </div>
-  </div>
-</div>
 
-<!-- ═══════════════════════════ STICKY FOOTER ═══════════════════════════ -->
-<div class="fixed bottom-0 left-0 w-full bg-transparent p-3 z-20 pointer-events-none">
-  <div class="max-w-[430px] mx-auto bg-white/95 backdrop-blur-md border border-slate-200 p-3.5 shadow-2xl rounded-2xl pointer-events-auto flex items-center justify-between footer-bar">
-    <div>
-      <p class="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Total Quantity</p>
-      <p class="text-xl font-black text-navyDark">
-        <span id="totalQtyDisplay">0</span><span class="text-xs font-semibold text-slate-500"> units</span>
-      </p>
-    </div>
-    <button type="button" onclick="triggerConfirm()"
-      class="bg-navyPrimary hover:bg-navyDark text-white px-4 py-3 rounded-xl text-xs font-extrabold transition-all flex items-center space-x-1.5 btn-press shadow-md">
-      <span>PLACE ORDER</span><i class="fa-solid fa-paper-plane text-[10px]"></i>
-    </button>
-  </div>
-</div>
+      <label>Ordered by</label>
+      <input id="orderedBy" readonly>
 
-<!-- ═══════════════════════════ CONFIRM ORDER MODAL ═══════════════════════════ -->
-<div id="confirmModal" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
-  <div class="modal-card bg-white rounded-2xl w-full max-w-[370px] shadow-2xl overflow-hidden border border-slate-100 flex flex-col" style="max-height:90vh;">
-    <div class="bg-gradient-to-r from-navyDark to-navyPrimary px-5 py-4 flex items-center space-x-3 relative overflow-hidden hdr-shine shrink-0">
-      <div class="w-9 h-9 rounded-full bg-white/15 flex items-center justify-center border border-white/25 step-pulse shrink-0">
-        <i class="fa-solid fa-clipboard-check text-white text-sm"></i>
-      </div>
-      <div>
-        <p class="text-white font-extrabold text-xs uppercase tracking-widest">Confirm New Order</p>
-        <p class="text-sky-300 text-[10px] font-medium mt-0.5">Review your items before submitting</p>
-      </div>
-    </div>
-    <div class="overflow-y-auto flex-1 p-4 space-y-3">
-      <div id="confirmSummary" class="bg-slate-50 rounded-xl border border-slate-200 text-left text-xs overflow-hidden"></div>
-      <div id="slideTrack" class="slide-track select-none" style="height:58px;">
-        <div id="slideFill" class="slide-fill" style="width:0"></div>
-        <span class="slide-label">SLIDE TO SUBMIT &nbsp;›&nbsp;›</span>
-        <div id="slideThumb" class="slide-thumb">
-          <i class="fa-solid fa-angles-right"></i>
-        </div>
-      </div>
-      <button type="button" onclick="document.getElementById('confirmModal').classList.add('hidden')"
-        class="w-full bg-slate-100 hover:bg-slate-200 text-slate-500 py-2.5 rounded-xl font-bold text-xs btn-press transition-all">
-        <i class="fa-solid fa-xmark mr-1"></i>Cancel
-      </button>
-    </div>
-  </div>
-</div>
+      <div id="items" class="items"></div>
 
-<!-- ═══════════════════════════ LOADING OVERLAY ═══════════════════════════ -->
-<div id="loadingOverlay" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
-  <div class="modal-card bg-white rounded-3xl w-full max-w-[370px] shadow-2xl overflow-hidden border border-slate-100">
-    <div class="px-6 pt-8 pb-8 text-center space-y-6">
-      <div>
-        <h3 id="progTitle" class="font-extrabold text-[18px] text-navyPrimary uppercase tracking-wide leading-tight">PROCESSING REQUEST</h3>
-        <p id="progSub" class="text-slate-400 text-[13px] font-medium mt-2">Initializing secure connection...</p>
-      </div>
-      <div class="w-full px-2 pt-2 pb-1">
-        <div class="flex items-start justify-between w-full">
-          <div class="flex flex-col items-center space-y-2 flex-1">
-            <div id="s1" class="w-11 h-11 rounded-full flex items-center justify-center text-base transition-all duration-500 bg-slate-100 text-slate-300 border-2 border-slate-200">
-              <i class="fa-solid fa-paper-plane"></i>
-            </div>
-            <span id="s1t" class="text-[11px] font-bold text-slate-400 tracking-wide">Sent</span>
+      <p><b>Total quantity: <span id="total">0</span></b></p>
+      <button id="submitButton" onclick="placeOrder()">Place order</button>
+      <p id="orderMessage"></p>
+    </section>
+
+    <section class="card">
+      <h2>Recent orders</h2>
+      <button class="secondary" onclick="loadHistory()">Refresh</button>
+      <div id="history" class="muted">No history loaded.</div>
+    </section>
+
+    <section class="card">
+      <h2>Admin report</h2>
+      <button class="secondary" onclick="unlockAdmin()">Unlock export</button>
+
+      <div id="adminPanel" class="hidden">
+        <div class="grid">
+          <div>
+            <label>Start date</label>
+            <input id="startDate" type="date">
           </div>
-          <div id="arr1" class="flex items-center justify-center space-x-[-3px] flex-1 mt-[14px]">
-            <i class="fa-solid fa-chevron-right text-slate-300 text-[12px]"></i>
-            <i class="fa-solid fa-chevron-right text-slate-300 text-[12px]"></i>
-            <i class="fa-solid fa-chevron-right text-slate-300 text-[12px]"></i>
-            <i class="fa-solid fa-chevron-right text-slate-300 text-[12px]"></i>
-          </div>
-          <div class="flex flex-col items-center space-y-2 flex-1">
-            <div id="s2" class="w-11 h-11 rounded-full flex items-center justify-center text-base transition-all duration-500 bg-slate-100 text-slate-300 border-2 border-slate-200">
-              <i class="fa-solid fa-gears"></i>
-            </div>
-            <span id="s2t" class="text-[11px] font-bold text-slate-400 tracking-wide">Processed</span>
-          </div>
-          <div id="arr2" class="flex items-center justify-center space-x-[-3px] flex-1 mt-[14px]">
-            <i class="fa-solid fa-chevron-right text-slate-300 text-[12px]"></i>
-            <i class="fa-solid fa-chevron-right text-slate-300 text-[12px]"></i>
-            <i class="fa-solid fa-chevron-right text-slate-300 text-[12px]"></i>
-            <i class="fa-solid fa-chevron-right text-slate-300 text-[12px]"></i>
-          </div>
-          <div class="flex flex-col items-center space-y-2 flex-1">
-            <div id="s3" class="w-11 h-11 rounded-full flex items-center justify-center text-base transition-all duration-500 bg-slate-100 text-slate-300 border-2 border-slate-200">
-              <i id="s3icon" class="fa-regular fa-clock"></i>
-            </div>
-            <span id="s3t" class="text-[11px] font-bold text-slate-400 tracking-wide">Completed</span>
+          <div>
+            <label>End date</label>
+            <input id="endDate" type="date">
           </div>
         </div>
-      </div>
-    </div>
-  </div>
-</div>
 
-<!-- ═══════════════════════════ ALERT MODAL ═══════════════════════════ -->
-<div id="alertModal" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-5 hidden">
-  <div class="modal-card bg-white rounded-2xl w-full max-w-[340px] shadow-2xl overflow-hidden border border-slate-100">
-    <div id="alertStrip" class="h-1.5 w-full bg-gradient-to-r from-sky-400 to-blue-600"></div>
-    <div class="p-6 text-center space-y-3">
-      <div id="alertIconWrap" class="w-14 h-14 rounded-full icon-ring-blue flex items-center justify-center mx-auto text-2xl shadow-sm">
-        <i id="alertIcon" class="fa-solid fa-circle-info"></i>
+        <button onclick="exportReport()">Download CSV report</button>
       </div>
-      <div>
-        <h3 id="alertTitle" class="modal-title font-extrabold text-sm text-navyPrimary uppercase tracking-wider inline-block">Notification</h3>
-        <p id="alertMsg" class="text-xs text-slate-500 mt-3 font-medium leading-relaxed"></p>
-      </div>
-      <button type="button" onclick="document.getElementById('alertModal').classList.add('hidden')"
-        class="btn-navy w-full text-white py-3 rounded-xl font-bold text-xs shadow-md mt-1">
-        OK
-      </button>
-    </div>
-  </div>
-</div>
+    </section>
 
-<!-- ═══════════════════════════ CONFIRM DIALOG ═══════════════════════════ -->
-<div id="cfmModal" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-5 hidden">
-  <div class="modal-card bg-white rounded-2xl w-full max-w-[340px] shadow-2xl overflow-hidden border border-slate-100">
-    <div class="h-1.5 w-full bg-gradient-to-r from-amber-400 to-orange-500"></div>
-    <div class="p-6 text-center space-y-3">
-      <div class="w-14 h-14 rounded-full icon-ring-amber flex items-center justify-center mx-auto text-2xl shadow-sm">
-        <i class="fa-solid fa-triangle-exclamation"></i>
-      </div>
-      <div>
-        <h3 id="cfmTitle" class="modal-title font-extrabold text-sm text-navyPrimary uppercase tracking-wider inline-block">Confirmation</h3>
-        <p id="cfmMsg" class="text-xs text-slate-500 mt-3 font-medium leading-relaxed"></p>
-      </div>
-      <div class="grid grid-cols-2 gap-2.5 pt-1">
-        <button type="button" id="cfmCancel"
-          class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 rounded-xl font-bold text-xs btn-press transition-all">
-          Cancel
-        </button>
-        <button type="button" id="cfmOk"
-          class="btn-navy w-full text-white py-3 rounded-xl font-bold text-xs shadow-md">
-          Confirm
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════ ADMIN PASSWORD MODAL ═══════════════════════════ -->
-<div id="adminModal" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-5 hidden">
-  <div class="modal-card bg-white rounded-2xl w-full max-w-[320px] shadow-2xl overflow-hidden border border-slate-100">
-    <div class="h-1.5 w-full bg-gradient-to-r from-navyDark to-navyPrimary"></div>
-    <div class="p-5 space-y-4">
-      <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 rounded-xl bg-navyPrimary/10 flex items-center justify-center shrink-0">
-          <i class="fa-solid fa-shield-halved text-navyPrimary text-sm"></i>
-        </div>
-        <div>
-          <p class="font-extrabold text-xs text-navyPrimary uppercase tracking-widest">Admin Access</p>
-          <p class="text-[10px] text-slate-400 font-medium mt-0.5">Export is restricted to admins only</p>
-        </div>
-      </div>
-      <div>
-        <label class="text-[11px] text-slate-500 font-bold uppercase tracking-wider mb-1 block">Password</label>
-        <div class="relative">
-          <input type="password" id="adminPassInput" placeholder="Enter admin password"
-            class="w-full pl-9 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-navyPrimary transition-all"
-            oninput="document.getElementById('adminPassErr').classList.add('hidden')">
-          <i class="fa-solid fa-lock absolute left-3 top-3 text-slate-400 text-xs"></i>
-          <button type="button" onclick="toggleAdminPass()"
-            class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 transition-colors">
-            <i id="adminPassEye" class="fa-regular fa-eye text-xs"></i>
-          </button>
-        </div>
-        <p id="adminPassErr" class="hidden text-[11px] text-red-500 font-semibold mt-1.5 flex items-center space-x-1">
-          <i class="fa-solid fa-circle-exclamation text-[10px]"></i>
-          <span>លេខសម្ងាត់មិនត្រឹមត្រូវ!</span>
-        </p>
-      </div>
-      <div class="grid grid-cols-2 gap-2 pt-1">
-        <button type="button" onclick="closeAdminModal()"
-          class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 py-2.5 rounded-xl font-bold text-xs btn-press transition-all">
-          Cancel
-        </button>
-        <button type="button" onclick="submitAdminPass()"
-          class="btn-navy w-full text-white py-2.5 rounded-xl font-bold text-xs shadow-md flex items-center justify-center space-x-1.5">
-          <i class="fa-solid fa-unlock text-[10px]"></i><span>Unlock</span>
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
+    <button class="secondary" onclick="signOut()">Sign out</button>
+  </section>
+</main>
 
 <script>
-// ─── CONFIG ──────────────────────────────────────────────────
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyjX5vk-D2CggPFw6c-1L0xoZ_K-PpdqTjCdX5oVzXu1DrSTu4Wt-fsG5oyOQd418fsWg/exec";
+  /* Replace this with your Cloudflare Worker URL. */
+  const WORKER_URL = 'https://YOUR-WORKER.YOUR-SUBDOMAIN.workers.dev';
 
-let _adminHash = null;
-async function getAdminHash() {
-    if (_adminHash) return _adminHash;
-    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode("admin@230230"));
-    _adminHash = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-    return _adminHash;
-}
+  const SESSION_KEY = 'bakery_session_token';
+  let token = sessionStorage.getItem(SESSION_KEY) || '';
+  let config = null;
 
-const CACHE_KEY   = 'stb_order_history';
-const USER_KEY    = 'starbucks_logged_user';
-const RETRY_KEY   = 'stb_retry_queue';
-const ONE_YEAR_MS = 365*24*60*60*1000;
-const TWO_HOURS_MS= 2*60*60*1000;
-const MAX_QTY_PER = 500;
-const WARN_QTY    = 200;
+  function byId(id) {
+    return document.getElementById(id);
+  }
 
-const bakeryItems = [
-    { id:'item1', name:'Pain Croissant',       emoji:'🥐' },
-    { id:'item2', name:'Chocolate Croissant',  emoji:'🍫' },
-    { id:'item3', name:'Almond Croissant',     emoji:'🍞' },
-    { id:'item4', name:'Banana Cake',          emoji:'🍌' },
-    { id:'item5', name:'Pain au Raisin Roll',  emoji:'🌀' },
-    { id:'item6', name:'Danish Banana',        emoji:'🍋' },
-    { id:'item7', name:'Danish Apple',         emoji:'🍎' }
-];
-
-// ─── HELPERS ────────────────────────────────────────────────
-function showAlert(msg, title='Notification', type='info') {
-    document.getElementById('alertTitle').innerText = title;
-    document.getElementById('alertMsg').innerText   = msg;
-    const map = {
-        info:    { strip:'from-sky-400 to-blue-600',     ring:'icon-ring-blue',  icon:'fa-circle-info' },
-        success: { strip:'from-emerald-400 to-green-600',ring:'icon-ring-green', icon:'fa-circle-check' },
-        error:   { strip:'from-red-400 to-rose-600',     ring:'icon-ring-red',   icon:'fa-circle-xmark' },
-        warning: { strip:'from-amber-400 to-orange-500', ring:'icon-ring-amber', icon:'fa-triangle-exclamation' },
-    };
-    const t = map[type] || map.info;
-    const strip = document.getElementById('alertStrip');
-    const wrap  = document.getElementById('alertIconWrap');
-    const icon  = document.getElementById('alertIcon');
-    strip.className = `h-1.5 w-full bg-gradient-to-r ${t.strip}`;
-    wrap.className  = `w-14 h-14 rounded-full ${t.ring} flex items-center justify-center mx-auto text-2xl shadow-sm`;
-    icon.className  = `fa-solid ${t.icon}`;
-    document.getElementById('alertModal').classList.remove('hidden');
-}
-
-let _cfmCb = null;
-function showConfirm(msg, cb, title='Confirmation') {
-    document.getElementById('cfmTitle').innerText = title;
-    document.getElementById('cfmMsg').innerText   = msg;
-    _cfmCb = cb;
-    document.getElementById('cfmModal').classList.remove('hidden');
-}
-document.getElementById('cfmCancel').addEventListener('click',()=>{
-    document.getElementById('cfmModal').classList.add('hidden'); _cfmCb=null;
-});
-document.getElementById('cfmOk').addEventListener('click',()=>{
-    document.getElementById('cfmModal').classList.add('hidden');
-    if(_cfmCb) _cfmCb(); _cfmCb=null;
-});
-
-function showFieldErr(inputId, errId, msg='') {
-    const el = document.getElementById(inputId);
-    const er = document.getElementById(errId);
-    if(el) el.classList.add('err-border');
-    if(er) { if(msg) er.innerText=msg; er.classList.add('show'); }
-}
-function clearFieldErr(inputId, errId) {
-    const el = document.getElementById(inputId);
-    const er = document.getElementById(errId);
-    if(el) el.classList.remove('err-border');
-    if(er) er.classList.remove('show');
-}
-
-document.addEventListener('keydown', e => {
-    if (e.key==='Enter' && !document.getElementById('loginScreen').style.display) submitLogin();
-});
-
-// ─── AUTH ────────────────────────────────────────────────────
-function checkAuth() {
-    const u = localStorage.getItem(USER_KEY);
-    if (u) {
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('loggedInUserDisplay').innerText = u.split(' (')[0];
-        document.getElementById('orderedBy').value = u;
-        renderHistory();
-        retryQueue();
-        startRealtimePoll(); 
-        setInterval(() => { if (histOpen) renderHistory(); }, 1000);
-    } else {
-        document.getElementById('loginScreen').style.display = 'flex';
-    }
-}
-
-function submitLogin() {
-    const name  = document.getElementById('loginFullName').value.trim();
-    const phone = document.getElementById('loginPhone').value.trim();
-    let ok = true;
-    if (!name) { showFieldErr('loginFullName','errName'); ok=false; }
-    else clearFieldErr('loginFullName','errName');
-
-    if (!phone) {
-        showFieldErr('loginPhone','errPhone','សូមបញ្ចូលលេខទូរស័ព្ទ'); ok=false;
-    } else if (!/^\d{8,10}$/.test(phone.replace(/[\s\-]/g,''))) {
-        showFieldErr('loginPhone','errPhone','លេខទូរស័ព្ទត្រូវ ៨–១០ ខ្ទង់ (0-9)'); ok=false;
-    } else {
-        clearFieldErr('loginPhone','errPhone');
-    }
-
-    if (!ok) return;
-    localStorage.setItem(USER_KEY, `${name} (${phone})`);
-    checkAuth();
-}
-
-function handleLogout() {
-    showConfirm('តើអ្នកពិតជាចង់ Logout មែនទេ?', ()=>{
-        localStorage.removeItem(USER_KEY);
-        window.location.reload();
-    }, 'Confirm Logout');
-}
-
-window.addEventListener('DOMContentLoaded', () => {
-    buildMenu();
-    checkAuth();
-});
-
-// ─── DATE SETUP ──────────────────────────────────────────────
-const todayStr    = new Date().toISOString().split('T')[0];
-const tomorrowObj = new Date(); tomorrowObj.setDate(tomorrowObj.getDate()+1);
-const tomorrowStr = tomorrowObj.toISOString().split('T')[0];
-const odEl = document.getElementById('orderDate');
-odEl.min   = todayStr;
-odEl.value = tomorrowStr;
-if (localStorage.getItem('stb_branch')) document.getElementById('branch').value = localStorage.getItem('stb_branch');
-if (localStorage.getItem('stb_time'))   document.getElementById('pickupTime').value = localStorage.getItem('stb_time');
-document.getElementById('pickupTime').addEventListener('input', function(){localStorage.setItem('stb_time',this.value);});
-
-function validateTime() {
-    const val = document.getElementById('pickupTime').value.trim();
-    const ok  = /^(0?[1-9]|1[0-2]):[0-5]\d\s*(AM|PM)$/i.test(val);
-    if (!ok && val) {
-        showFieldErr('pickupTime','errTime');
-    } else {
-        clearFieldErr('pickupTime','errTime');
-    }
-    return ok || !val;
-}
-
-const tdl = document.getElementById('timeOptions');
-let tHtml = '';
-for (let m=0; m<24*60; m+=5) {
-    const tot = (330+m)%(24*60), h=Math.floor(tot/60), min=tot%60;
-    const hour=h%12||12, ampm=h<12?'AM':'PM';
-    tHtml += `<option value="${String(hour).padStart(2,'0')}:${String(min).padStart(2,'0')} ${ampm}">`;
-}
-tdl.innerHTML = tHtml;
-
-// ─── MENU BUILD & TOGGLE ─────────────────────────────────────
-const quantities = {};
-let isMenuExpanded = false;
-
-function buildMenu() {
-    const menuContainer = document.getElementById('menuContainer');
-    menuContainer.innerHTML = '';
-    
-    bakeryItems.forEach((item, idx) => {
-        quantities[item.id] = quantities[item.id] || 0; 
-        const card = document.createElement('div');
-        
-        card.className = `menu-item-row bg-cardWhite p-3 rounded-xl shadow-sm border border-slate-200/80 flex justify-between items-center menu-card card-enter`;
-        card.style.animationDelay = (0.18 + idx * 0.07) + 's';
-        
-        if (idx >= 3 && !isMenuExpanded) {
-            card.style.display = 'none';
-        }
-
-        card.innerHTML = `
-          <div class="flex items-center space-x-3 flex-1 pr-2">
-            <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center shrink-0 border border-blue-100 shadow-sm text-base"><span class="emoji-icon">${item.emoji}</span></div>
-            <h3 class="font-bold text-sm text-slate-900">${item.name}</h3>
-          </div>
-          <div class="flex items-center space-x-1.5 bg-slate-50 rounded-lg p-1 border border-slate-200">
-            <button type="button" class="qty-btn px-2.5 h-7 flex items-center justify-center text-slate-500 bg-white rounded-md shadow-sm border border-slate-200 btn-press font-bold text-xs" onclick="updateQty('${item.id}',-10)">-10</button>
-            <input type="number" id="qty-${item.id}" value="${quantities[item.id]}" min="0" max="${MAX_QTY_PER}"
-              class="font-black text-navyDark w-10 text-center text-base bg-transparent focus:outline-none"
-              oninput="manualQty('${item.id}',this.value)">
-            <button type="button" class="qty-btn px-2.5 h-7 flex items-center justify-center text-slate-500 bg-white rounded-md shadow-sm border border-slate-200 btn-press font-bold text-xs" onclick="updateQty('${item.id}',20)">+20</button>
-          </div>`;
-        menuContainer.appendChild(card);
+  async function api(action, payload = {}) {
+    const response = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action,
+        ...payload
+      })
     });
-}
 
-function toggleMenuItems() {
-    isMenuExpanded = !isMenuExpanded;
-    const btn = document.getElementById('btnToggleMenu');
-    
-    if (isMenuExpanded) {
-        btn.innerHTML = `<span>View Less Items</span><i class="fa-solid fa-chevron-up text-[10px]"></i>`;
-    } else {
-        btn.innerHTML = `<span>View More Items</span><i class="fa-solid fa-chevron-down text-[10px]"></i>`;
-    }
-    
-    buildMenu();
-}
+    const result = await response.json();
 
-
-// ─── QTY LOGIC ───────────────────────────────────────────────
-let totalQty = 0;
-function animateTotal() {
-    const el = document.getElementById('totalQtyDisplay');
-    el.classList.remove('num-flip'); void el.offsetWidth; el.classList.add('num-flip');
-    el.innerText = totalQty;
-    document.getElementById('qtyWarn').classList.toggle('hidden', totalQty <= WARN_QTY);
-}
-window.updateQty = function(id, change) {
-    const nv = Math.min(MAX_QTY_PER, Math.max(0, quantities[id]+change));
-    totalQty += nv - quantities[id];
-    quantities[id] = nv;
-    const inp = document.getElementById(`qty-${id}`);
-    if(inp){
-       inp.value = nv;
-       inp.classList.remove('qty-pop'); void inp.offsetWidth; inp.classList.add('qty-pop');
-    }
-    animateTotal();
-};
-window.manualQty = function(id, val) {
-    const nv = Math.min(MAX_QTY_PER, Math.max(0, parseInt(val)||0));
-    totalQty += nv - quantities[id];
-    quantities[id] = nv;
-    const inp = document.getElementById(`qty-${id}`);
-    if(inp) inp.value = nv;
-    animateTotal();
-};
-
-
-// ─── HISTORY — REALTIME SYNC ─────────────────────────────────
-let histOpen      = false;
-let _pollTimer    = null;
-let _lastSyncTime = 0;
-const POLL_MS     = 30_000;
-
-function toggleHistory() {
-    histOpen = !histOpen;
-    document.getElementById('histContainer').classList.toggle('hidden', !histOpen);
-    document.getElementById('histChevron').classList.toggle('rotate-180', histOpen);
-    if (histOpen) renderHistory();
-}
-
-function fetchCloud(e) {
-    const manual = !!e;
-    if (manual) e.stopPropagation();
-
-    if (manual) {
-        const c = document.getElementById('histContainer');
-        c.innerHTML = `<p class="text-sky-600 text-center py-2 italic text-[11px]">
-            <i class="fa-solid fa-spinner fa-spin mr-1"></i> Syncing...</p>`;
-        c.classList.remove('hidden');
-        histOpen = true;
-        document.getElementById('histChevron').classList.add('rotate-180');
+    if (!result.ok) {
+      throw new Error(result.message || 'Request failed.');
     }
 
-    const syncBtn = document.querySelector('[onclick="fetchCloud(event)"]');
-    if (syncBtn) syncBtn.innerHTML = '<i class="fa-solid fa-rotate fa-spin mr-0.5"></i> Sync';
+    return result;
+  }
 
-    fetch(WEB_APP_URL + '?t=' + Date.now())
-        .then(r => r.json())
-        .then(res => {
-            if (res.status === 'success' && Array.isArray(res.history)) {
-                // រក្សាទុកតែលក្ខខណ្ឌ Qty = 0 (ដកបម្រាម Test Data ឲ្យ History បង្ហាញការសាកល្បងបាន)
-                const cleanHistory = res.history.filter(x => {
-                    if (x.totalQty === 0 || x.totalQty === "0" || x.totalQty === "") return false;
-                    return true;
-                });
-                
-                localStorage.setItem(CACHE_KEY, JSON.stringify(cleanHistory));
-                _lastSyncTime = Date.now();
-            }
-            renderHistory();
-            if (manual) showAlert('Sync completed!', 'Live Sync', 'success');
-        })
-        .catch(() => {
-            renderHistory();
-            if (manual) showAlert('Sync failed. Check internet.', 'Error', 'error');
-        })
-        .finally(() => {
-            if (syncBtn) syncBtn.innerHTML = '<i class="fa-solid fa-rotate mr-0.5"></i> Sync';
-        });
-}
+  function showMessage(id, text, success = false) {
+    const el = byId(id);
+    el.textContent = text || '';
+    el.className = success ? 'success' : 'error';
+  }
 
-function startRealtimePoll() {
-    if (_pollTimer) clearInterval(_pollTimer);
-    fetchCloud(null);
-    _pollTimer = setInterval(() => { fetchCloud(null); }, POLL_MS);
-}
+  function escapeHtml(value) {
+    const div = document.createElement('div');
+    div.textContent = String(value ?? '');
+    return div.innerHTML;
+  }
 
-function stopRealtimePoll() {
-    if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
-}
-
-document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-        stopRealtimePoll();
-    } else {
-        if (localStorage.getItem(USER_KEY)) startRealtimePoll();
-    }
-});
-
-function renderHistory() {
-    const c     = document.getElementById('histContainer');
-    const badge = document.getElementById('histBadge');
-    const now   = Date.now();
-
-    let h = JSON.parse(localStorage.getItem(CACHE_KEY) || '[]');
-    h = h.filter(x => now - (x.timestamp || now) < ONE_YEAR_MS);
-    localStorage.setItem(CACHE_KEY, JSON.stringify(h));
-
-    const display = h.filter(x => now - (x.timestamp || now) < TWO_HOURS_MS);
-
-    badge.innerHTML = `<span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1 align-middle animate-pulse"></span>${display.length} ord`;
-
-    const syncAgo = _lastSyncTime
-        ? `<p class="text-[9px] text-slate-300 text-right pr-1 mt-1 mb-0.5">
-               <i class="fa-solid fa-rotate text-[8px] mr-0.5"></i>
-               Synced ${Math.round((now - _lastSyncTime) / 1000)}s ago
-           </p>`
-        : '';
-
-    if (!display.length) {
-        c.innerHTML = syncAgo +
-            `<p class="text-slate-400 text-center py-2 italic text-[11px]">No orders in the last 2 hours.</p>`;
-        return;
-    }
-
-    c.innerHTML = syncAgo + display.map(o => `
-      <div class="bg-white p-2 rounded-lg border border-sky-100 flex justify-between items-center shadow-xs text-[11px]">
-        <div>
-          <p class="font-extrabold text-navyPrimary">${o.doNo || '—'}
-            <span class="text-[9px] text-slate-500">(${o.branch})</span>
-          </p>
-          <p class="text-[9px] text-slate-500">
-            Date: ${o.orderDate} | Qty: <span class="font-bold text-sky-600">${o.totalQty}</span>
-          </p>
-          <p class="text-[9px] text-slate-400">By: ${o.orderedBy || '—'}</p>
-        </div>
-        <span class="text-[9px] font-bold px-1.5 py-1 rounded whitespace-nowrap
-          ${o.doNo === '(Pending Sync)'
-            ? 'text-amber-600 bg-amber-50 border border-amber-100'
-            : 'text-emerald-600 bg-emerald-50 border border-emerald-100'}">
-          <i class="fa-solid ${o.doNo === '(Pending Sync)' ? 'fa-hourglass-half' : 'fa-cloud-check'} mr-1"></i>
-          ${o.doNo === '(Pending Sync)' ? 'Pending' : 'Synced'}
-        </span>
-      </div>`).join('');
-}
-
-
-// ─── EXPORT (Admin Only) ─────────────────────────────────────
-function populateExportBranches() {
-    let h = JSON.parse(localStorage.getItem(CACHE_KEY) || '[]');
-    let branchSet = new Set();
-    
-    h.forEach(order => {
-        if(order.branch) {
-            // 🔴 បម្រាម Test Data: លាក់សាខាសាកល្បងមិនឲ្យចេញក្នុង Dropdown ពេល Export
-            const b = order.branch.toLowerCase();
-            const o = (order.orderedBy || "").toLowerCase();
-            if (!(b.includes('test') || b.includes('update') || b.includes('code') || o.includes('test') || o.includes('update') || o.includes('code'))) {
-                branchSet.add(order.branch);
-            }
-        }
+  function today() {
+    return new Date().toLocaleDateString('en-CA', {
+      timeZone: 'Asia/Phnom_Penh'
     });
-    
-    const expBranchSelect = document.getElementById('expBranch');
-    expBranchSelect.innerHTML = '<option value="ALL">ALL BRANCHES</option>';
-    
-    let branches = Array.from(branchSet).sort();
-    branches.forEach(b => {
-        expBranchSelect.innerHTML += `<option value="${b}">${b}</option>`;
-    });
-}
+  }
 
-function openExport(e) {
-    if(e) e.stopPropagation();
-    
-    populateExportBranches();
-    
-    const inp = document.getElementById('adminPassInput');
-    inp.value = '';
-    inp.type  = 'password';
-    document.getElementById('adminPassEye').className = 'fa-regular fa-eye text-xs';
-    document.getElementById('adminPassErr').classList.add('hidden');
-    document.getElementById('adminModal').classList.remove('hidden');
-    setTimeout(() => inp.focus(), 100);
-}
-
-function closeAdminModal() {
-    document.getElementById('adminModal').classList.add('hidden');
-}
-
-function toggleAdminPass() {
-    const inp = document.getElementById('adminPassInput');
-    const eye = document.getElementById('adminPassEye');
-    if (inp.type === 'password') {
-        inp.type = 'text';
-        eye.className = 'fa-regular fa-eye-slash text-xs';
-    } else {
-        inp.type = 'password';
-        eye.className = 'fa-regular fa-eye text-xs';
-    }
-}
-
-async function submitAdminPass() {
-    const pass = document.getElementById('adminPassInput').value;
-    if (!pass) {
-        document.getElementById('adminPassErr').classList.remove('hidden');
-        return;
-    }
-    const buf     = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pass));
-    const hash    = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-    const correct = await getAdminHash();
-    if (hash !== correct) {
-        document.getElementById('adminPassErr').classList.remove('hidden');
-        document.getElementById('adminPassInput').value = '';
-        document.getElementById('adminPassInput').focus();
-        return;
-    }
-    closeAdminModal();
-    const now = new Date();
-    const f   = new Date(now.getFullYear(), now.getMonth(), 1);
-    const l   = new Date(now.getFullYear(), now.getMonth()+1, 0);
-    document.getElementById('expStart').value = f.toISOString().split('T')[0];
-    document.getElementById('expEnd').value   = l.toISOString().split('T')[0];
-    document.getElementById('errExportDate').classList.remove('show');
-    document.getElementById('exportModal').classList.remove('hidden');
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    const inp = document.getElementById('adminPassInput');
-    if (inp) inp.addEventListener('keydown', e => { if (e.key === 'Enter') submitAdminPass(); });
-});
-
-function closeExport(){ document.getElementById('exportModal').classList.add('hidden'); }
-
-function validateExportDates() {
-    const s=document.getElementById('expStart').value;
-    const e=document.getElementById('expEnd').value;
-    const err=document.getElementById('errExportDate');
-    if(s&&e&&e<s){ err.classList.add('show'); return false; }
-    err.classList.remove('show'); return true;
-}
-
-function doExport(type) {
-    if(!validateExportDates()){ return; }
-    const branch=document.getElementById('expBranch').value;
-    const start =document.getElementById('expStart').value;
-    const end   =document.getElementById('expEnd').value;
-    if(!start||!end){ showAlert('សូមជ្រើសកាលបរិច្ឆេទ','Required','warning'); return; }
-    
-    let h=JSON.parse(localStorage.getItem(CACHE_KEY)||'[]');
-    
-    // 🔴 បម្រាម Test Data: កាត់ទិន្នន័យសាកល្បងចោល កុំឲ្យវាធ្លាយចូលក្នុង File Excel ឬ PDF
-    let f = h.filter(x => {
-        const b = (x.branch || "").toLowerCase();
-        const o = (x.orderedBy || "").toLowerCase();
-        const isTest = b.includes('test') || b.includes('update') || b.includes('code') || 
-                       o.includes('test') || o.includes('update') || o.includes('code');
-                       
-        return !isTest && (branch === 'ALL' || x.branch === branch) && x.orderDate >= start && x.orderDate <= end;
-    });
-    
-    if(!f.length){ showAlert('ពុំមានទិន្នន័យតាមលក្ខខណ្ឌនេះ!','No Data','warning'); return; }
-
-    if(type==='sheet'){
-        const rows=f.map(r=>({
-            'DO No':r.doNo,'Branch':r.branch,'Date':r.orderDate,'Time':r.pickupTime,
-            'Ordered By':r.orderedBy||'—',
-            'Plain Croissant':r.item1||0,'Chocolate Croissant':r.item2||0,
-            'Almond Croissant':r.item3||0,'Banana Cake':r.item4||0,
-            'Pain au Raisin Roll':r.item5||0,'Danish Banana':r.item6||0,
-            'Danish Apple':r.item7||0,'Total Qty':r.totalQty||0
-        }));
-        const ws=XLSX.utils.json_to_sheet(rows);
-        const wb=XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb,ws,'Bakery Report');
-        XLSX.writeFile(wb,`Bakery_${branch==='ALL'?'All':branch}_${start}_${end}.xlsx`);
-        closeExport();
-        showAlert('ទាញយក Excel បានជោគជ័យ!','Export Success','success');
-
-    } else {
-        const pw=window.open('','','height=900,width=1100');
-        let grand=0, rows='';
-        f.forEach(r=>{
-            grand+=Number(r.totalQty);
-            rows+=`<tr><td><b>${r.doNo}</b></td><td>${r.branch}</td><td>${r.orderDate}</td>
-                   <td>${r.pickupTime}</td><td>${r.orderedBy||'—'}</td>
-                   <td>${r.item1||0}</td><td>${r.item2||0}</td><td>${r.item3||0}</td>
-                   <td>${r.item4||0}</td><td>${r.item5||0}</td><td>${r.item6||0}</td>
-                   <td>${r.item7||0}</td><td><b>${r.totalQty||0}</b></td></tr>`;
-        });
-        pw.document.write(`<html><head><title>Bakery Report</title>
-          <style>@page{size:landscape;margin:15mm}body{font-family:Arial,sans-serif;padding:20px;color:#1e293b}
-          .hdr{text-align:center;border-bottom:3px solid #1B365D;padding-bottom:12px;margin-bottom:20px}
-          h2{color:#1B365D;font-size:20px;font-weight:800;text-transform:uppercase;margin:0 0 6px}
-          table{width:100%;border-collapse:collapse;font-size:11px}
-          th,td{border:1px solid #cbd5e1;padding:8px 10px;text-align:left}
-          th{background:#1B365D!important;color:#fff!important;font-size:10px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-          tr:nth-child(even){background:#f8fafc!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-          .ft{display:flex;justify-content:space-between;margin-top:24px;font-size:12px;font-weight:700;border-top:2px solid #e2e8f0;padding-top:12px}
-          </style></head><body>
-          <div class="hdr"><h2>INDEPENDENCE HOTEL BY DARA — BAKERY REPORT</h2>
-          <p style="font-size:12px;color:#475569;font-weight:600;margin:0">Branch: ${branch==='ALL'?'All Branches':branch} | ${start} to ${end}</p></div>
-          <table><thead><tr>
-            <th>DO No</th><th>Branch</th><th>Date</th><th>Time</th><th>Ordered By</th>
-            <th>Pain Croissant</th><th>Choc Croissant</th><th>Almond Croissant</th>
-            <th>Banana Cake</th><th>Pain au Raisin Roll</th><th>Danish Banana</th>
-            <th>Danish Apple</th><th>Total Qty</th>
-          </tr></thead><tbody>${rows}</tbody></table>
-          <div class="ft"><span>Total Orders: ${f.length}</span><span>Grand Total: ${grand} units</span></div>
-          </body></html>`);
-        pw.document.close(); pw.focus();
-        setTimeout(()=>pw.print(),600);
-        closeExport();
-    }
-}
-
-// ─── PLACE ORDER — VALIDATION ────────────────────────────────
-function triggerConfirm() {
-    if(totalQty===0){ showAlert('សូមបញ្ចូល Item យ៉ាងហោចណាស់ ១!','Empty Order','warning'); return; }
-
-    let ok = true;
-    const branch = document.getElementById('branch').value;
-    const date   = document.getElementById('orderDate').value;
-    const time   = document.getElementById('pickupTime').value.trim();
-
-    if(!branch){ showFieldErr('branch','errBranch'); ok=false; } else clearFieldErr('branch','errBranch');
-    if(!date||date<todayStr){ showFieldErr('orderDate','errDate'); ok=false; } else clearFieldErr('orderDate','errDate');
-
-    if(!time){ showFieldErr('pickupTime','errTime','សូមបញ្ចូលម៉ោង'); ok=false; }
-    else if(!/^(0?[1-9]|1[0-2]):[0-5]\d\s*(AM|PM)$/i.test(time)){ showFieldErr('pickupTime','errTime'); ok=false; }
-    else clearFieldErr('pickupTime','errTime');
-
-    if(!ok){ window.scrollTo({top:0,behavior:'smooth'}); return; }
-
-    const orderedBy = document.getElementById('orderedBy').value;
-    let html = `<div class="p-3 border-b border-slate-200 space-y-1.5">
-      <p class="font-bold text-navyPrimary text-sm">📍 ${branch}</p>
-      <p class="text-slate-500">📅 ${date} &nbsp;⏰ ${time}</p>
-      <p class="text-slate-500">👤 ${orderedBy}</p></div>
-      <div class="p-3 space-y-1.5">`;
-    bakeryItems.forEach(it=>{
-        if(quantities[it.id]>0)
-            html+=`<div class="flex justify-between items-center bg-white px-2.5 py-1.5 rounded-lg border border-slate-100 shadow-sm font-semibold text-slate-700"><span>${it.emoji} ${it.name}</span><span class="font-extrabold text-sky-600 text-sm bg-sky-50 px-2 py-0.5 rounded-lg">×${quantities[it.id]}</span></div>`;
-    });
-    html+=`</div>`;
-    document.getElementById('confirmSummary').innerHTML=html;
-    document.getElementById('confirmModal').classList.remove('hidden');
-    resetSlider();
-}
-
-// ─── SLIDE TO CONFIRM ────────────────────────────────────────
-const slideTrack=document.getElementById('slideTrack');
-const slideThumb=document.getElementById('slideThumb');
-const slideFill =document.getElementById('slideFill');
-let dragging=false,startX=0,trackW=0;
-function resetSlider(){
-    slideThumb.style.transition='transform .3s cubic-bezier(.34,1.56,.64,1)';
-    slideFill.style.transition ='width .3s cubic-bezier(.34,1.56,.64,1)';
-    slideThumb.style.transform='translateX(0px)';
-    slideFill.style.width='0px';
-}
-const cx=e=>e.touches?e.touches[0].clientX:e.clientX;
-slideThumb.addEventListener('mousedown', e=>{dragging=true;startX=cx(e);trackW=slideTrack.clientWidth-slideThumb.clientWidth-8;slideThumb.style.transition='none';slideFill.style.transition='none';});
-slideThumb.addEventListener('touchstart',e=>{dragging=true;startX=cx(e);trackW=slideTrack.clientWidth-slideThumb.clientWidth-8;slideThumb.style.transition='none';slideFill.style.transition='none';},{passive:true});
-window.addEventListener('mousemove',e=>{if(!dragging)return;let d=Math.min(Math.max(cx(e)-startX,0),trackW);slideThumb.style.transform=`translateX(${d}px)`;slideFill.style.width=`${d+slideThumb.clientWidth}px`;});
-window.addEventListener('touchmove',e=>{if(!dragging)return;let d=Math.min(Math.max(cx(e)-startX,0),trackW);slideThumb.style.transform=`translateX(${d}px)`;slideFill.style.width=`${d+slideThumb.clientWidth}px`;},{passive:true});
-window.addEventListener('mouseup', stopSlide);
-window.addEventListener('touchend',stopSlide);
-function stopSlide(){
-    if(!dragging)return; dragging=false;
-    const m=window.getComputedStyle(slideThumb).transform;
-    let cur=0;
-    if(m&&m!=='none'){const v=m.match(/matrix.*\(([-0-9., ]+)\)/)?.[1].split(',').map(Number);if(v)cur=v.length===6?v[4]:v[12]||0;}
-    if(cur>=trackW*.75){
-        slideThumb.style.transform=`translateX(${trackW}px)`;
-        slideFill.style.width='100%';
-        setTimeout(()=>{ document.getElementById('confirmModal').classList.add('hidden'); resetSlider(); submitOrder(); },250);
-    } else { resetSlider(); }
-}
-
-// ─── ORDER SUBMISSION ────────────────────────────────────────
-function setStep(n) {
-    const BASE    = 'w-11 h-11 rounded-full flex items-center justify-center text-base transition-all duration-500 border-2';
-    const PENDING = `${BASE} bg-slate-100 text-slate-300 border-slate-200`;
-    const DONE    = `${BASE} bg-emerald-500 text-white border-emerald-400 shadow-md`;
-    const ACTIVE  = `${BASE} bg-navyPrimary text-white border-sky-400 s-glow`;
-
-    const TL_PENDING = 'text-[11px] font-bold text-slate-400 tracking-wide';
-    const TL_DONE    = 'text-[11px] font-extrabold text-emerald-500 tracking-wide';
-    const TL_ACTIVE  = 'text-[11px] font-extrabold text-navyPrimary tracking-wide';
-
-    const s  = [document.getElementById('s1'),  document.getElementById('s2'),  document.getElementById('s3')];
-    const st = [document.getElementById('s1t'), document.getElementById('s2t'), document.getElementById('s3t')];
-    const a  = [document.getElementById('arr1'), document.getElementById('arr2')];
-    const s3icon = document.getElementById('s3icon');
-
-    for (let i = 0; i < 3; i++) {
-        const si = s[i].querySelector('i');
-        if (i < n) {
-            s[i].className = DONE; st[i].className = TL_DONE;
-            if (si) { si.className = 'fa-solid fa-check'; si.removeAttribute('style'); }
-        } else if (i === n) {
-            s[i].className = ACTIVE; st[i].className = TL_ACTIVE;
-            if (i === 1 && si) { si.className = 'fa-solid fa-gears fa-spin'; }
-            else if (i === 2 && si) { si.className = 'fa-regular fa-clock clock-spin'; }
-            else if (si) { si.className = 'fa-solid fa-paper-plane'; }
-        } else {
-            s[i].className = PENDING; st[i].className = TL_PENDING;
-            if (i === 2) { if (s3icon) { s3icon.className = 'fa-regular fa-clock'; } }
-            else if (si) { si.className = i === 0 ? 'fa-solid fa-paper-plane' : 'fa-solid fa-gears'; }
-        }
+  function createOrderId() {
+    if (crypto.randomUUID) {
+      return crypto.randomUUID().replace(/-/g, '');
     }
 
-    const ARR_BASE = 'flex items-center justify-center space-x-[-3px] flex-1 mt-[22px]';
-    if (a[0]) a[0].className = n === 1 ? `arr-active ${ARR_BASE}` : n >= 2 ? `arr-done  ${ARR_BASE}` : ARR_BASE;
-    if (a[1]) a[1].className = n === 2 ? `arr-active ${ARR_BASE}` : n >= 3 ? `arr-done  ${ARR_BASE}` : ARR_BASE;
-}
+    return Date.now().toString(36) +
+      Math.random().toString(36).slice(2) +
+      Math.random().toString(36).slice(2);
+  }
 
-function setProgText(title, sub, titleCls, subCls) {
-    const pt = document.getElementById('progTitle');
-    const ps = document.getElementById('progSub');
-    if (pt) { pt.innerText = title; pt.className = titleCls; }
-    if (ps) { ps.innerText = sub;   ps.className = subCls; }
-}
+  async function signIn() {
+    showMessage('loginMessage', '');
 
-function submitOrder(){
-    const overlay = document.getElementById('loadingOverlay');
-    overlay.classList.remove('hidden');
-    setProgText(
-        'PROCESSING REQUEST', 'Initializing secure connection...',
-        'font-extrabold text-[17px] text-navyPrimary uppercase tracking-wide leading-tight',
-        'text-slate-400 text-[13px] font-medium mt-1.5'
-    );
-    setStep(0);
-
-    const data = {
-        branch:    document.getElementById('branch').value,
-        orderDate: document.getElementById('orderDate').value,
-        pickupTime:document.getElementById('pickupTime').value.trim(),
-        orderedBy: document.getElementById('orderedBy').value.trim(),
-        item1:quantities['item1']||0, item2:quantities['item2']||0, item3:quantities['item3']||0,
-        item4:quantities['item4']||0, item5:quantities['item5']||0, item6:quantities['item6']||0,
-        item7:quantities['item7']||0
-    };
-
-    setTimeout(() => {
-        setStep(1);
-        setProgText(
-            'PROCESSING REQUEST', 'Dispatching order to server...',
-            'font-extrabold text-[17px] text-navyPrimary uppercase tracking-wide leading-tight',
-            'text-slate-400 text-[13px] font-medium mt-1.5'
-        );
-    }, 300);
-
-    setTimeout(() => {
-        setStep(2);
-        setProgText(
-            'PROCESSING REQUEST', 'Updating Database & Telegram...',
-            'font-extrabold text-[17px] text-navyPrimary uppercase tracking-wide leading-tight',
-            'text-sky-500 text-[13px] font-semibold mt-1.5'
-        );
-    }, 900);
-
-    fetch(WEB_APP_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(data) })
-    .then(() => {
-        const entry = {
-            timestamp: Date.now(), doNo:'(Pending Sync)', branch:data.branch,
-            orderDate:data.orderDate, pickupTime:data.pickupTime, orderedBy:data.orderedBy,
-            item1:data.item1, item2:data.item2, item3:data.item3, item4:data.item4,
-            item5:data.item5, item6:data.item6, item7:data.item7,
-            totalQty: Object.values(quantities).reduce((a,b)=>a+b,0)
-        };
-        const h = JSON.parse(localStorage.getItem(CACHE_KEY)||'[]');
-        h.unshift(entry); localStorage.setItem(CACHE_KEY, JSON.stringify(h));
-
-        setTimeout(() => {
-            setStep(3);
-            setProgText(
-                'ORDER COMPLETED! 🎉', 'PDF sent to Telegram successfully.',
-                'font-extrabold text-[17px] text-emerald-500 uppercase tracking-wide leading-tight',
-                'text-emerald-400 text-[13px] font-semibold mt-1.5'
-            );
-            triggerHaptic('success');
-            setTimeout(() => window.location.reload(), 3500);
-        }, 1200);
-    })
-    .catch(()=>{
-        overlay.classList.add('hidden');
-        const q=JSON.parse(localStorage.getItem(RETRY_KEY)||'[]');
-        q.push({...data, savedAt:Date.now()});
-        localStorage.setItem(RETRY_KEY,JSON.stringify(q));
-        updateRetryBadge();
-        showAlert('Network error — Order បានរក្សាទុក ហើយនឹង retry ដោយស្វ័យប្រវត្តិ នៅពេលអ៊ីនធ័រណិតមកវិញ!','Saved Offline','warning');
-    });
-}
-
-function triggerHaptic(type) {
-    if ('vibrate' in navigator) {
-        const patterns = { success: [80, 40, 80, 40, 200], error: [300], warning: [100, 60, 100] };
-        navigator.vibrate(patterns[type] || patterns.success);
-    }
-    if (window.HapticFeedback) { try { window.HapticFeedback.impact({ style: 'medium' }); } catch(_){} }
-    if (window.webkit?.messageHandlers?.haptic) { try { window.webkit.messageHandlers.haptic.postMessage('success'); } catch(_){} }
     try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator(); const gain = ctx.createGain();
-        osc.connect(gain); gain.connect(ctx.destination);
-        gain.gain.setValueAtTime(0, ctx.currentTime);
-        osc.frequency.setValueAtTime(440, ctx.currentTime);
-        osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.001);
-        [0, 0.08, 0.16].forEach(offset => {
-            const o2 = ctx.createOscillator(); const g2 = ctx.createGain();
-            o2.connect(g2); g2.connect(ctx.destination);
-            g2.gain.setValueAtTime(0, ctx.currentTime + offset);
-            o2.frequency.setValueAtTime(200, ctx.currentTime + offset);
-            o2.start(ctx.currentTime + offset); o2.stop(ctx.currentTime + offset + 0.001);
-        });
-        setTimeout(() => ctx.close(), 500);
-    } catch(_) {}
+      const result = await api('login', {
+        name: byId('name').value,
+        phone: byId('phone').value,
+        password: byId('accessPassword').value
+      });
 
-    const flash = document.createElement('div');
-    flash.style.cssText = `position:fixed; inset:0; z-index:9999; pointer-events:none; background:rgba(56,189,248,0.08); animation: hapticFlash 0.32s ease forwards;`;
-    if (!document.getElementById('hapticFlashStyle')) {
-        const s = document.createElement('style'); s.id = 'hapticFlashStyle';
-        s.textContent = `@keyframes hapticFlash { 0% { opacity:1; } 40% { opacity:0.6; } 70% { opacity:0.9; } 100% { opacity:0; } }`;
-        document.head.appendChild(s);
-    }
-    document.body.appendChild(flash);
-    setTimeout(() => flash.remove(), 400);
-}
-function updateRetryBadge(){
-    const q=JSON.parse(localStorage.getItem(RETRY_KEY)||'[]');
-    const badge=document.getElementById('offlineBadge');
-    if(q.length){ badge.classList.remove('hidden'); document.getElementById('offlineCount').innerText=q.length; }
-    else { badge.classList.add('hidden'); }
-}
+      token = result.token;
+      sessionStorage.setItem(SESSION_KEY, token);
+      byId('accessPassword').value = '';
 
-async function retryQueue(){
-    const q=JSON.parse(localStorage.getItem(RETRY_KEY)||'[]');
-    if(!q.length) return;
-    updateRetryBadge();
-    const remaining=[];
-    for(const order of q){
-        try {
-            await fetch(WEB_APP_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(order)});
-            const entry={timestamp:Date.now(),doNo:'(Pending Sync)',branch:order.branch,orderDate:order.orderDate,
-                pickupTime:order.pickupTime,orderedBy:order.orderedBy,
-                item1:order.item1,item2:order.item2,item3:order.item3,item4:order.item4,
-                item5:order.item5,item6:order.item6,item7:order.item7,
-                totalQty:(order.item1||0)+(order.item2||0)+(order.item3||0)+(order.item4||0)+(order.item5||0)+(order.item6||0)+(order.item7||0)};
-            const h=JSON.parse(localStorage.getItem(CACHE_KEY)||'[]');
-            h.unshift(entry); localStorage.setItem(CACHE_KEY,JSON.stringify(h));
-        } catch { remaining.push(order); }
+      await startApp();
+    } catch (error) {
+      showMessage('loginMessage', error.message);
     }
-    localStorage.setItem(RETRY_KEY,JSON.stringify(remaining));
-    updateRetryBadge();
-    if(q.length>remaining.length) showAlert(`បានផ្ញើ Order ${q.length-remaining.length} ដែល Pending ដោយជោគជ័យ!`,'Retry Success','success');
-}
+  }
+
+  async function startApp() {
+    try {
+      config = await api('config', { token });
+
+      byId('loginCard').classList.add('hidden');
+      byId('app').classList.remove('hidden');
+
+      byId('user').textContent =
+        'Signed in as ' + config.user.name;
+
+      byId('orderedBy').value =
+        config.user.name + ' (' + config.user.phone + ')';
+
+      byId('branch').innerHTML = config.branches
+        .map(branch =>
+          `<option value="${escapeHtml(branch)}">${escapeHtml(branch)}</option>`
+        )
+        .join('');
+
+      byId('orderDate').min = today();
+      byId('orderDate').value = today();
+
+      byId('items').innerHTML = config.items
+        .map((item, index) => `
+          <div class="item">
+            <label>${escapeHtml(item)}</label>
+            <input
+              type="number"
+              min="0"
+              max="${config.maxPerItem}"
+              value="0"
+              data-item="${index}"
+              oninput="updateTotal()">
+          </div>
+        `)
+        .join('');
+
+      updateTotal();
+      loadHistory();
+    } catch (error) {
+      token = '';
+      sessionStorage.removeItem(SESSION_KEY);
+      showMessage('loginMessage', 'Session expired. Please sign in again.');
+    }
+  }
+
+  function updateTotal() {
+    const total = [...document.querySelectorAll('[data-item]')]
+      .reduce((sum, input) => sum + (Number(input.value) || 0), 0);
+
+    byId('total').textContent = total;
+  }
+
+  async function placeOrder() {
+    const button = byId('submitButton');
+    button.disabled = true;
+    showMessage('orderMessage', 'Submitting…', true);
+
+    const payload = {
+      token,
+      clientOrderId: createOrderId(),
+      branch: byId('branch').value,
+      orderDate: byId('orderDate').value,
+      pickupTime: byId('pickupTime').value,
+      items: [...document.querySelectorAll('[data-item]')]
+        .map(input => Number(input.value) || 0)
+    };
+
+    try {
+      const result = await api('submitOrder', payload);
+
+      showMessage(
+        'orderMessage',
+        (result.duplicate ? 'Already received: ' : 'Order sent: ') +
+        result.doNo,
+        true
+      );
+
+      document
+        .querySelectorAll('[data-item]')
+        .forEach(input => input.value = 0);
+
+      updateTotal();
+      loadHistory();
+    } catch (error) {
+      showMessage('orderMessage', error.message);
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  async function loadHistory() {
+    const history = byId('history');
+    history.textContent = 'Loading…';
+
+    try {
+      const result = await api('history', { token });
+
+      history.innerHTML = result.orders.length
+        ? result.orders.map(order => `
+            <div class="row">
+              <b>${escapeHtml(order.doNo)}</b> —
+              ${escapeHtml(order.branch)}<br>
+              <span class="muted">
+                ${escapeHtml(order.orderDate)}
+                ${escapeHtml(order.pickupTime)}
+                · Qty ${order.totalQty}
+                · ${escapeHtml(order.orderedBy)}
+              </span>
+            </div>
+          `).join('')
+        : 'No orders yet.';
+    } catch (error) {
+      history.textContent = error.message;
+    }
+  }
+
+  async function unlockAdmin() {
+    const password = prompt('Admin password');
+
+    if (password === null) return;
+
+    try {
+      await api('admin', { token, password });
+
+      byId('adminPanel').classList.remove('hidden');
+      byId('startDate').value = today();
+      byId('endDate').value = today();
+    } catch (error) {
+      alert(error.message);
+    }
+  }
+
+  function csvCell(value) {
+    let text = String(value ?? '');
+
+    /* Blocks Excel/CSV formula injection. */
+    if (/^[=+\-@]/.test(text)) {
+      text = "'" + text;
+    }
+
+    return '"' + text.replace(/"/g, '""') + '"';
+  }
+
+  async function exportReport() {
+    try {
+      const result = await api('report', {
+        token,
+        startDate: byId('startDate').value,
+        endDate: byId('endDate').value,
+        branch: 'ALL'
+      });
+
+      const header = [
+        'DO Number', 'Branch', 'Order Date', 'Pickup Time',
+        'Ordered By', ...config.items,
+        'Total Qty', 'Total Amount', 'Version'
+      ];
+
+      const csv = [
+        header.map(csvCell).join(','),
+        ...result.orders.map(order => [
+          order.doNo,
+          order.branch,
+          order.orderDate,
+          order.pickupTime,
+          order.orderedBy,
+          ...order.items,
+          order.totalQty,
+          order.totalAmount,
+          order.version
+        ].map(csvCell).join(','))
+      ].join('\n');
+
+      const blob = new Blob([csv], {
+        type: 'text/csv;charset=utf-8'
+      });
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+
+      link.href = url;
+      link.download =
+        `Bakery_${byId('startDate').value}_${byId('endDate').value}.csv`;
+
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      alert(error.message);
+    }
+  }
+
+  async function signOut() {
+    try {
+      await api('logout', { token });
+    } catch (_) {}
+
+    sessionStorage.removeItem(SESSION_KEY);
+    location.reload();
+  }
+
+  if (token) {
+    startApp();
+  }
 </script>
 </body>
 </html>
