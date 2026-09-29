@@ -298,9 +298,6 @@
             <option value="BROWN - Independence Beach">BROWN - Independence Beach</option>
             <option value="BROWN - Island View (R9)">BROWN - Island View (R9)</option>
             <option value="BROWN - Seaview">BROWN - Seaview</option>
-            
-            
-            
           </select>
           <i class="fa-solid fa-location-dot absolute left-3 top-2.5 text-slate-400 text-xs"></i>
           <i class="fa-solid fa-chevron-down absolute right-3 top-3 text-slate-400 text-xs pointer-events-none"></i>
@@ -385,9 +382,6 @@
         <label class="font-bold text-slate-600 block mb-1">Branch</label>
         <select id="expBranch" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg font-semibold text-slate-700">
           <option value="ALL">ALL BRANCHES</option>
-          
-          
-          
         </select>
       </div>
       <div class="grid grid-cols-2 gap-2">
@@ -1293,7 +1287,7 @@ function submitOrder(){
         );
     }, 900);
 
-    fetch(WEB_APP_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) })
+    fetch(WEB_APP_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(data) })
     .then(() => {
         // Cache local pending entry
         const entry = {
@@ -1419,7 +1413,7 @@ async function retryQueue(){
     const remaining=[];
     for(const order of q){
         try {
-            await fetch(WEB_APP_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(order)});
+            await fetch(WEB_APP_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(order)});
             // Success — add to cache
             const entry={timestamp:Date.now(),doNo:'(Pending Sync)',branch:order.branch,orderDate:order.orderDate,
                 pickupTime:order.pickupTime,orderedBy:order.orderedBy,
