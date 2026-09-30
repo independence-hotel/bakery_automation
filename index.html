@@ -994,15 +994,26 @@ function doExport(type) {
     if(!f.length){ showAlert('ពុំមានទិន្នន័យតាមលក្ខខណ្ឌនេះ!','No Data','warning'); return; }
 
     if(type==='sheet'){
+        const exportedAt = new Date().toLocaleString('en-GB',{
+            year:'numeric',month:'short',day:'2-digit',
+            hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true
+        });
         const rows=f.map(r=>({
             'DO No':r.doNo,'Branch':r.branch,'Date':r.orderDate,'Time':r.pickupTime,
             'Ordered By':r.orderedBy||'—',
-            'Plain Croissant':r.item1||0,'Chocolate Croissant':r.item2||0,
+            'Pain Croissant':r.item1||0,'Chocolate Croissant':r.item2||0,
             'Almond Croissant':r.item3||0,'Banana Cake':r.item4||0,
             'Pain au Raisin Roll':r.item5||0,'Danish Banana':r.item6||0,
             'Danish Apple':r.item7||0,'Total Qty':r.totalQty||0
         }));
         const ws=XLSX.utils.json_to_sheet(rows);
+        // Add blank row then footer row
+        const dataLen = rows.length;
+        const footerRow = dataLen + 2; // +1 header +1 blank
+        XLSX.utils.sheet_add_aoa(ws,
+            [[''], [`Food & Beverage Department — Auto generated at: ${exportedAt}`]],
+            { origin: { r: dataLen + 1, c: 0 } }
+        );
         const wb=XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb,ws,'Bakery Report');
         XLSX.writeFile(wb,`Bakery_${branch==='ALL'?'All':branch}_${start}_${end}.xlsx`);
@@ -1010,35 +1021,90 @@ function doExport(type) {
         showAlert('ទាញយក Excel បានជោគជ័យ!','Export Success','success');
 
     } else {
-        const pw=window.open('','','height=900,width=1100');
+        const pw=window.open('','','height=900,width=1400');
+        const exportedAt = new Date().toLocaleString('en-GB',{
+            year:'numeric',month:'short',day:'2-digit',
+            hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true
+        });
         let grand=0, rows='';
         f.forEach(r=>{
             grand+=Number(r.totalQty);
-            rows+=`<tr><td><b>${r.doNo}</b></td><td>${r.branch}</td><td>${r.orderDate}</td>
-                   <td>${r.pickupTime}</td><td>${r.orderedBy||'—'}</td>
-                   <td>${r.item1||0}</td><td>${r.item2||0}</td><td>${r.item3||0}</td>
-                   <td>${r.item4||0}</td><td>${r.item5||0}</td><td>${r.item6||0}</td>
-                   <td>${r.item7||0}</td><td><b>${r.totalQty||0}</b></td></tr>`;
+            // [FIX 1] Remove Time col — keep only orderDate
+            rows+=`<tr>
+                   <td><b>${r.doNo}</b></td>
+                   <td>${r.branch}</td>
+                   <td>${r.orderDate}</td>
+                   <td>${r.orderedBy||'—'}</td>
+                   <td class="num">${r.item1||0}</td>
+                   <td class="num">${r.item2||0}</td>
+                   <td class="num">${r.item3||0}</td>
+                   <td class="num">${r.item4||0}</td>
+                   <td class="num">${r.item5||0}</td>
+                   <td class="num">${r.item6||0}</td>
+                   <td class="num">${r.item7||0}</td>
+                   <td class="num ttl"><b>${r.totalQty||0}</b></td>
+                   </tr>`;
         });
         pw.document.write(`<html><head><title>Bakery Report</title>
-          <style>@page{size:landscape;margin:15mm}body{font-family:Arial,sans-serif;padding:20px;color:#1e293b}
-          .hdr{text-align:center;border-bottom:3px solid #1B365D;padding-bottom:12px;margin-bottom:20px}
-          h2{color:#1B365D;font-size:20px;font-weight:800;text-transform:uppercase;margin:0 0 6px}
-          table{width:100%;border-collapse:collapse;font-size:11px}
-          th,td{border:1px solid #cbd5e1;padding:8px 10px;text-align:left}
-          th{background:#1B365D!important;color:#fff!important;font-size:10px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-          tr:nth-child(even){background:#f8fafc!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-          .ft{display:flex;justify-content:space-between;margin-top:24px;font-size:12px;font-weight:700;border-top:2px solid #e2e8f0;padding-top:12px}
+          <style>
+          /* [FIX 3+4] A4 landscape, fit to page */
+          @page { size: A4 landscape; margin: 10mm 12mm; }
+          * { box-sizing: border-box; }
+          body { font-family: Arial, sans-serif; font-size: 9px; color: #1e293b; margin:0; padding:0; }
+          .hdr { text-align:center; border-bottom:3px solid #1B365D; padding-bottom:8px; margin-bottom:12px; }
+          h2 { color:#1B365D; font-size:14px; font-weight:800; text-transform:uppercase; margin:0 0 4px; letter-spacing:.3px; }
+          .sub { font-size:9px; color:#475569; font-weight:600; margin:0; }
+          /* [FIX 4] Table fits full width, compact */
+          table { width:100%; border-collapse:collapse; table-layout:fixed; font-size:8.5px; }
+          /* Column widths tuned for A4 landscape (277mm usable) */
+          col.c-do     { width:13%; }
+          col.c-branch { width:17%; }
+          col.c-date   { width:9%;  }
+          col.c-by     { width:12%; }
+          col.c-item   { width:6%;  }
+          col.c-total  { width:7%;  }
+          th, td { border:1px solid #cbd5e1; padding:4px 5px; text-align:left; overflow:hidden; word-break:break-word; vertical-align:middle; }
+          /* [FIX 2+4] Navy header */
+          th { background:#1B365D !important; color:#fff !important; font-size:8px; font-weight:700;
+               text-transform:uppercase; letter-spacing:.2px;
+               -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+          tr:nth-child(even) { background:#f8fafc !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+          .num { text-align:center; }
+          .ttl { background:#EFF8FF !important; color:#1B365D; font-weight:700; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+          .ft { display:flex; justify-content:space-between; margin-top:10px; font-size:9px; font-weight:700;
+                border-top:2px solid #e2e8f0; padding-top:8px; color:#1e293b; }
+          /* [FIX 2] Footer — gray, 10px, auto-generated */
+          .gen-footer { margin-top:10px; font-size:10px; color:#94a3b8; text-align:left; }
+          @media print {
+            body { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+          }
           </style></head><body>
-          <div class="hdr"><h2>INDEPENDENCE HOTEL BY DARA — BAKERY REPORT</h2>
-          <p style="font-size:12px;color:#475569;font-weight:600;margin:0">Branch: ${branch==='ALL'?'All Branches':branch} | ${start} to ${end}</p></div>
-          <table><thead><tr>
-            <th>DO No</th><th>Branch</th><th>Date</th><th>Time</th><th>Ordered By</th>
-            <th>Pain Croissant</th><th>Choc Croissant</th><th>Almond Croissant</th>
-            <th>Banana Cake</th><th>Pain au Raisin Roll</th><th>Danish Banana</th>
-            <th>Danish Apple</th><th>Total Qty</th>
-          </tr></thead><tbody>${rows}</tbody></table>
-          <div class="ft"><span>Total Orders: ${f.length}</span><span>Grand Total: ${grand} units</span></div>
+          <div class="hdr">
+            <h2>INDEPENDENCE HOTEL BY DARA — BAKERY REPORT</h2>
+            <p class="sub">Branch: ${branch==='ALL'?'All Branches':branch} &nbsp;|&nbsp; ${start} to ${end}</p>
+          </div>
+          <table>
+            <colgroup>
+              <col class="c-do"><col class="c-branch"><col class="c-date">
+              <col class="c-by"><col class="c-item"><col class="c-item">
+              <col class="c-item"><col class="c-item"><col class="c-item">
+              <col class="c-item"><col class="c-item"><col class="c-total">
+            </colgroup>
+            <thead><tr>
+              <th>DO No</th><th>Branch</th><th>Date</th><th>Ordered By</th>
+              <th>Pain<br>Croissant</th><th>Choc<br>Croissant</th><th>Almond<br>Croissant</th>
+              <th>Banana<br>Cake</th><th>Pain au<br>Raisin Roll</th><th>Danish<br>Banana</th>
+              <th>Danish<br>Apple</th><th>Total<br>Qty</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+          <div class="ft">
+            <span>Total Orders: ${f.length} records</span>
+            <span>Grand Total Qty: ${grand} units</span>
+          </div>
+          <div class="gen-footer">
+            Food &amp; Beverage Department &nbsp;—&nbsp; Auto generated at: ${exportedAt}
+          </div>
           </body></html>`);
         pw.document.close(); pw.focus();
         setTimeout(()=>pw.print(),600);
