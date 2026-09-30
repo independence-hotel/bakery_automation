@@ -141,7 +141,7 @@
         <p class="field-err" id="errName">សូមបញ្ចូលឈ្មោះពេញ</p>
       </div>
       <div>
-        <label class="text-[11px] text-slate-500 font-bold uppercase tracking-wider mb-1 block">Phone Number *</label>
+        <label class="text-[11px] text-slate-500 font-bold uppercase tracking-wider mb-1 block">Phone Number (Optional)</label>
         <div class="relative">
           <input type="tel" id="loginPhone" placeholder="e.g. 012 345 678" autocomplete="tel"
             class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-navyPrimary transition-all"
@@ -617,22 +617,27 @@ function checkAuth() {
 }
 
 function submitLogin() {
-    const name  = document.getElementById('loginFullName').value.trim();
+    const name = document.getElementById('loginFullName').value.trim();
     const phone = document.getElementById('loginPhone').value.trim();
     let ok = true;
+
+    // ឆែកមើលឈ្មោះ (ចាំបាច់ត្រូវតែមាន)
     if (!name) { showFieldErr('loginFullName','errName'); ok=false; }
     else clearFieldErr('loginFullName','errName');
 
-    if (!phone) {
-        showFieldErr('loginPhone','errPhone','សូមបញ្ចូលលេខទូរស័ព្ទ'); ok=false;
-    } else if (!/^\d{8,10}$/.test(phone.replace(/[\s\-]/g,''))) {
+    // លេខទូរស័ព្ទជាជម្រើស (Optional): បើមានវាយបញ្ចូល ទើបវាឆែកមើលទម្រង់ ៨-១០ ខ្ទង់
+    if (phone && !/^\d{8,10}$/.test(phone.replace(/[\s\-]/g,''))) {
         showFieldErr('loginPhone','errPhone','លេខទូរស័ព្ទត្រូវ ៨–១០ ខ្ទង់ (0-9)'); ok=false;
     } else {
         clearFieldErr('loginPhone','errPhone');
     }
 
     if (!ok) return;
-    localStorage.setItem(USER_KEY, `${name} (${phone})`);
+
+    // រៀបចំឈ្មោះសម្រាប់បង្ហាញ (បើមានលេខទូរស័ព្ទ ដាក់រង្វង់ក្រចក, បើអត់ទេ យកតែឈ្មោះ)
+    const userDisplay = phone ? `${name} (${phone})` : name;
+    localStorage.setItem(USER_KEY, userDisplay);
+    
     checkAuth();
 }
 
