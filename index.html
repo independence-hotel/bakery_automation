@@ -366,6 +366,13 @@
     </div>
     <div class="overflow-y-auto flex-1 p-4 space-y-3">
       <div id="confirmSummary" class="bg-slate-50 rounded-xl border border-slate-200 text-left text-xs overflow-hidden"></div>
+      
+      <!-- ─── ប្រអប់ Note / Remark ─── -->
+      <div class="mt-2 mb-2">
+        <label class="text-[11px] text-slate-500 font-bold uppercase tracking-wider mb-1 block">Special Note / Remark</label>
+        <textarea id="orderNote" rows="2" placeholder="Ex: សូមខ្ចប់នំឱ្យបានស្អាត..." class="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-navyPrimary transition-all"></textarea>
+      </div>
+
       <div id="slideTrack" class="slide-track select-none" style="height:58px;">
         <div id="slideFill" class="slide-fill" style="width:0"></div>
         <span class="slide-label">SLIDE TO SUBMIT &nbsp;›&nbsp;›</span>
@@ -484,7 +491,7 @@
         </div>
         <div>
           <p class="font-extrabold text-xs text-navyPrimary uppercase tracking-widest">Admin Access</p>
-          <p class="text-[10px] text-slate-400 font-medium mt-0.5">Export is restricted to admins only</p>
+          <p id="adminModalSub" class="text-[10px] text-slate-400 font-medium mt-0.5">Admin verification required.</p>
         </div>
       </div>
       <div>
@@ -621,11 +628,9 @@ function submitLogin() {
     const phone = document.getElementById('loginPhone').value.trim();
     let ok = true;
 
-    // ឆែកមើលឈ្មោះ (ចាំបាច់ត្រូវតែមាន)
     if (!name) { showFieldErr('loginFullName','errName'); ok=false; }
     else clearFieldErr('loginFullName','errName');
 
-    // លេខទូរស័ព្ទជាជម្រើស (Optional): បើមានវាយបញ្ចូល ទើបវាឆែកមើលទម្រង់ ៨-១០ ខ្ទង់
     if (phone && !/^\d{8,10}$/.test(phone.replace(/[\s\-]/g,''))) {
         showFieldErr('loginPhone','errPhone','លេខទូរស័ព្ទត្រូវ ៨–១០ ខ្ទង់ (0-9)'); ok=false;
     } else {
@@ -634,7 +639,6 @@ function submitLogin() {
 
     if (!ok) return;
 
-    // រៀបចំឈ្មោះសម្រាប់បង្ហាញ (បើមានលេខទូរស័ព្ទ ដាក់រង្វង់ក្រចក, បើអត់ទេ យកតែឈ្មោះ)
     const userDisplay = phone ? `${name} (${phone})` : name;
     localStorage.setItem(USER_KEY, userDisplay);
     
@@ -795,7 +799,6 @@ function fetchCloud(e) {
         .then(r => r.json())
         .then(res => {
             if (res.status === 'success' && Array.isArray(res.history)) {
-                // រក្សាទុកតែលក្ខខណ្ឌ Qty = 0 (ដកបម្រាម Test Data ឲ្យ History បង្ហាញការសាកល្បងបាន)
                 const cleanHistory = res.history.filter(x => {
                     if (x.totalQty === 0 || x.totalQty === "0" || x.totalQty === "") return false;
                     return true;
@@ -882,36 +885,12 @@ function renderHistory() {
 }
 
 
-// ─── EXPORT (Admin Only) ─────────────────────────────────────
-function populateExportBranches() {
-    let h = JSON.parse(localStorage.getItem(CACHE_KEY) || '[]');
-    let branchSet = new Set();
-    
-    h.forEach(order => {
-        if(order.branch) {
-            // 🔴 បម្រាម Test Data: លាក់សាខាសាកល្បងមិនឲ្យចេញក្នុង Dropdown ពេល Export
-            const b = order.branch.toLowerCase();
-            const o = (order.orderedBy || "").toLowerCase();
-            if (!(b.includes('test') || b.includes('update') || b.includes('code') || o.includes('test') || o.includes('update') || o.includes('code'))) {
-                branchSet.add(order.branch);
-            }
-        }
-    });
-    
-    const expBranchSelect = document.getElementById('expBranch');
-    expBranchSelect.innerHTML = '<option value="ALL">ALL BRANCHES</option>';
-    
-    let branches = Array.from(branchSet).sort();
-    branches.forEach(b => {
-        expBranchSelect.innerHTML += `<option value="${b}">${b}</option>`;
-    });
-}
+// ─── ADMIN MODAL FUNCTIONS ───────────────────────────────────
+let _adminSuccessCb = null;
 
-function openExport(e) {
-    if(e) e.stopPropagation();
-    
-    populateExportBranches();
-    
+function promptAdminAction(cb, subtext = "Admin verification required.") {
+    _adminSuccessCb = cb;
+    document.getElementById('adminModalSub').innerText = subtext;
     const inp = document.getElementById('adminPassInput');
     inp.value = '';
     inp.type  = 'password';
@@ -953,19 +932,56 @@ async function submitAdminPass() {
         return;
     }
     closeAdminModal();
-    const now = new Date();
-    const f   = new Date(now.getFullYear(), now.getMonth(), 1);
-    const l   = new Date(now.getFullYear(), now.getMonth()+1, 0);
-    document.getElementById('expStart').value = f.toISOString().split('T')[0];
-    document.getElementById('expEnd').value   = l.toISOString().split('T')[0];
-    document.getElementById('errExportDate').classList.remove('show');
-    document.getElementById('exportModal').classList.remove('hidden');
+    if (_adminSuccessCb) {
+        _adminSuccessCb();
+        _adminSuccessCb = null;
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     const inp = document.getElementById('adminPassInput');
     if (inp) inp.addEventListener('keydown', e => { if (e.key === 'Enter') submitAdminPass(); });
 });
+
+
+// ─── EXPORT (Admin Only) ─────────────────────────────────────
+function populateExportBranches() {
+    let h = JSON.parse(localStorage.getItem(CACHE_KEY) || '[]');
+    let branchSet = new Set();
+    
+    h.forEach(order => {
+        if(order.branch) {
+            const b = order.branch.toLowerCase();
+            const o = (order.orderedBy || "").toLowerCase();
+            if (!(b.includes('test') || b.includes('update') || b.includes('code') || o.includes('test') || o.includes('update') || o.includes('code'))) {
+                branchSet.add(order.branch);
+            }
+        }
+    });
+    
+    const expBranchSelect = document.getElementById('expBranch');
+    expBranchSelect.innerHTML = '<option value="ALL">ALL BRANCHES</option>';
+    
+    let branches = Array.from(branchSet).sort();
+    branches.forEach(b => {
+        expBranchSelect.innerHTML += `<option value="${b}">${b}</option>`;
+    });
+}
+
+function openExport(e) {
+    if(e) e.stopPropagation();
+    populateExportBranches();
+    
+    promptAdminAction(() => {
+        const now = new Date();
+        const f   = new Date(now.getFullYear(), now.getMonth(), 1);
+        const l   = new Date(now.getFullYear(), now.getMonth()+1, 0);
+        document.getElementById('expStart').value = f.toISOString().split('T')[0];
+        document.getElementById('expEnd').value   = l.toISOString().split('T')[0];
+        document.getElementById('errExportDate').classList.remove('show');
+        document.getElementById('exportModal').classList.remove('hidden');
+    }, "Export is restricted to admins only");
+}
 
 function closeExport(){ document.getElementById('exportModal').classList.add('hidden'); }
 
@@ -986,7 +1002,6 @@ function doExport(type) {
     
     let h=JSON.parse(localStorage.getItem(CACHE_KEY)||'[]');
     
-    // 🔴 បម្រាម Test Data: កាត់ទិន្នន័យសាកល្បងចោល កុំឲ្យវាធ្លាយចូលក្នុង File Excel ឬ PDF
     let f = h.filter(x => {
         const b = (x.branch || "").toLowerCase();
         const o = (x.orderedBy || "").toLowerCase();
@@ -1012,9 +1027,7 @@ function doExport(type) {
             'Danish Apple':r.item7||0,'Total Qty':r.totalQty||0
         }));
         const ws=XLSX.utils.json_to_sheet(rows);
-        // Add blank row then footer row
         const dataLen = rows.length;
-        const footerRow = dataLen + 2; // +1 header +1 blank
         XLSX.utils.sheet_add_aoa(ws,
             [[''], [`Food & Beverage Department — Auto generated at: ${exportedAt}`]],
             { origin: { r: dataLen + 1, c: 0 } }
@@ -1034,7 +1047,6 @@ function doExport(type) {
         let grand=0, rows='';
         f.forEach(r=>{
             grand+=Number(r.totalQty);
-            // [FIX 1] Remove Time col — keep only orderDate
             rows+=`<tr>
                    <td><b>${r.doNo}</b></td>
                    <td>${r.branch}</td>
@@ -1052,16 +1064,13 @@ function doExport(type) {
         });
         pw.document.write(`<html><head><title>Bakery Report</title>
           <style>
-          /* [FIX 3+4] A4 landscape, fit to page */
           @page { size: A4 landscape; margin: 10mm 12mm; }
           * { box-sizing: border-box; }
           body { font-family: Arial, sans-serif; font-size: 9px; color: #1e293b; margin:0; padding:0; }
           .hdr { text-align:center; border-bottom:3px solid #1B365D; padding-bottom:8px; margin-bottom:12px; }
           h2 { color:#1B365D; font-size:14px; font-weight:800; text-transform:uppercase; margin:0 0 4px; letter-spacing:.3px; }
           .sub { font-size:9px; color:#475569; font-weight:600; margin:0; }
-          /* [FIX 4] Table fits full width, compact */
           table { width:100%; border-collapse:collapse; table-layout:fixed; font-size:8.5px; }
-          /* Column widths tuned for A4 landscape (277mm usable) */
           col.c-do     { width:13%; }
           col.c-branch { width:17%; }
           col.c-date   { width:9%;  }
@@ -1069,7 +1078,6 @@ function doExport(type) {
           col.c-item   { width:6%;  }
           col.c-total  { width:7%;  }
           th, td { border:1px solid #cbd5e1; padding:4px 5px; text-align:left; overflow:hidden; word-break:break-word; vertical-align:middle; }
-          /* [FIX 2+4] Navy header */
           th { background:#1B365D !important; color:#fff !important; font-size:8px; font-weight:700;
                text-transform:uppercase; letter-spacing:.2px;
                -webkit-print-color-adjust:exact; print-color-adjust:exact; }
@@ -1078,7 +1086,6 @@ function doExport(type) {
           .ttl { background:#EFF8FF !important; color:#1B365D; font-weight:700; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
           .ft { display:flex; justify-content:space-between; margin-top:10px; font-size:9px; font-weight:700;
                 border-top:2px solid #e2e8f0; padding-top:8px; color:#1e293b; }
-          /* [FIX 2] Footer — gray, 10px, auto-generated */
           .gen-footer { margin-top:10px; font-size:10px; color:#94a3b8; text-align:left; }
           @media print {
             body { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
@@ -1119,8 +1126,6 @@ function doExport(type) {
 
 // ─── PLACE ORDER — VALIDATION ────────────────────────────────
 function triggerConfirm() {
-    if(totalQty===0){ showAlert('សូមបញ្ចូល Item យ៉ាងហោចណាស់ ១!','Empty Order','warning'); return; }
-
     let ok = true;
     const branch = document.getElementById('branch').value;
     const date   = document.getElementById('orderDate').value;
@@ -1147,21 +1152,25 @@ function triggerConfirm() {
     });
     html+=`</div>`;
     document.getElementById('confirmSummary').innerHTML=html;
+    
+    document.getElementById('orderNote').value = ''; 
     document.getElementById('confirmModal').classList.remove('hidden');
     resetSlider();
 }
 
-// ─── SLIDE TO CONFIRM ────────────────────────────────────────
+// ─── SLIDE TO CONFIRM & TEST MODE CHECK ──────────────────────
 const slideTrack=document.getElementById('slideTrack');
 const slideThumb=document.getElementById('slideThumb');
 const slideFill =document.getElementById('slideFill');
 let dragging=false,startX=0,trackW=0;
+
 function resetSlider(){
     slideThumb.style.transition='transform .3s cubic-bezier(.34,1.56,.64,1)';
     slideFill.style.transition ='width .3s cubic-bezier(.34,1.56,.64,1)';
     slideThumb.style.transform='translateX(0px)';
     slideFill.style.width='0px';
 }
+
 const cx=e=>e.touches?e.touches[0].clientX:e.clientX;
 slideThumb.addEventListener('mousedown', e=>{dragging=true;startX=cx(e);trackW=slideTrack.clientWidth-slideThumb.clientWidth-8;slideThumb.style.transition='none';slideFill.style.transition='none';});
 slideThumb.addEventListener('touchstart',e=>{dragging=true;startX=cx(e);trackW=slideTrack.clientWidth-slideThumb.clientWidth-8;slideThumb.style.transition='none';slideFill.style.transition='none';},{passive:true});
@@ -1169,15 +1178,40 @@ window.addEventListener('mousemove',e=>{if(!dragging)return;let d=Math.min(Math.
 window.addEventListener('touchmove',e=>{if(!dragging)return;let d=Math.min(Math.max(cx(e)-startX,0),trackW);slideThumb.style.transform=`translateX(${d}px)`;slideFill.style.width=`${d+slideThumb.clientWidth}px`;},{passive:true});
 window.addEventListener('mouseup', stopSlide);
 window.addEventListener('touchend',stopSlide);
+
 function stopSlide(){
     if(!dragging)return; dragging=false;
     const m=window.getComputedStyle(slideThumb).transform;
     let cur=0;
     if(m&&m!=='none'){const v=m.match(/matrix.*\(([-0-9., ]+)\)/)?.[1].split(',').map(Number);if(v)cur=v.length===6?v[4]:v[12]||0;}
+    
     if(cur>=trackW*.75){
         slideThumb.style.transform=`translateX(${trackW}px)`;
         slideFill.style.width='100%';
-        setTimeout(()=>{ document.getElementById('confirmModal').classList.add('hidden'); resetSlider(); submitOrder(); },250);
+        
+        setTimeout(() => { 
+            const noteStr = document.getElementById('orderNote').value.trim().toLowerCase();
+            const isTest = noteStr.includes('bug fixed') || noteStr.includes('code update');
+            
+            if (totalQty === 0 && !isTest) {
+                resetSlider();
+                showAlert('សូមបញ្ចូល Item យ៉ាងហោចណាស់ ១! ឬបញ្ចូលពាក្យ "bug fixed" / "code update" ក្នុង Note សម្រាប់ធ្វើ Admin Test.', 'Empty Order', 'warning');
+                return;
+            }
+            
+            if (isTest || totalQty === 0) {
+                document.getElementById('confirmModal').classList.add('hidden');
+                resetSlider();
+                // តម្រូវឱ្យវាយ Admin Password
+                promptAdminAction(() => {
+                    submitOrder(); 
+                }, "Testing mode requires Admin Password");
+            } else {
+                document.getElementById('confirmModal').classList.add('hidden'); 
+                resetSlider(); 
+                submitOrder();
+            }
+        }, 250);
     } else { resetSlider(); }
 }
 
@@ -1243,7 +1277,8 @@ function submitOrder(){
         orderedBy: document.getElementById('orderedBy').value.trim(),
         item1:quantities['item1']||0, item2:quantities['item2']||0, item3:quantities['item3']||0,
         item4:quantities['item4']||0, item5:quantities['item5']||0, item6:quantities['item6']||0,
-        item7:quantities['item7']||0
+        item7:quantities['item7']||0,
+        note:      document.getElementById('orderNote').value.trim() 
     };
 
     setTimeout(() => {
@@ -1271,7 +1306,8 @@ function submitOrder(){
             orderDate:data.orderDate, pickupTime:data.pickupTime, orderedBy:data.orderedBy,
             item1:data.item1, item2:data.item2, item3:data.item3, item4:data.item4,
             item5:data.item5, item6:data.item6, item7:data.item7,
-            totalQty: Object.values(quantities).reduce((a,b)=>a+b,0)
+            totalQty: Object.values(quantities).reduce((a,b)=>a+b,0),
+            note: data.note
         };
         const h = JSON.parse(localStorage.getItem(CACHE_KEY)||'[]');
         h.unshift(entry); localStorage.setItem(CACHE_KEY, JSON.stringify(h));
@@ -1279,7 +1315,7 @@ function submitOrder(){
         setTimeout(() => {
             setStep(3);
             setProgText(
-                'ORDER COMPLETED! 🎉', 'PDF sent to Telegram successfully.',
+                'ORDER COMPLETED! 🎉', 'Processed successfully.',
                 'font-extrabold text-[17px] text-emerald-500 uppercase tracking-wide leading-tight',
                 'text-emerald-400 text-[13px] font-semibold mt-1.5'
             );
@@ -1331,6 +1367,7 @@ function triggerHaptic(type) {
     document.body.appendChild(flash);
     setTimeout(() => flash.remove(), 400);
 }
+
 function updateRetryBadge(){
     const q=JSON.parse(localStorage.getItem(RETRY_KEY)||'[]');
     const badge=document.getElementById('offlineBadge');
@@ -1350,7 +1387,9 @@ async function retryQueue(){
                 pickupTime:order.pickupTime,orderedBy:order.orderedBy,
                 item1:order.item1,item2:order.item2,item3:order.item3,item4:order.item4,
                 item5:order.item5,item6:order.item6,item7:order.item7,
-                totalQty:(order.item1||0)+(order.item2||0)+(order.item3||0)+(order.item4||0)+(order.item5||0)+(order.item6||0)+(order.item7||0)};
+                totalQty:(order.item1||0)+(order.item2||0)+(order.item3||0)+(order.item4||0)+(order.item5||0)+(order.item6||0)+(order.item7||0),
+                note: order.note
+            };
             const h=JSON.parse(localStorage.getItem(CACHE_KEY)||'[]');
             h.unshift(entry); localStorage.setItem(CACHE_KEY,JSON.stringify(h));
         } catch { remaining.push(order); }
