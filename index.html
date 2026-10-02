@@ -972,14 +972,73 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ─── EXPORT (Admin Only) ─────────────────────────────────────
+function populateExportBranches() {
+    let h = JSON.parse(localStorage.getItem(CACHE_KEY) || '[]');
+    let branchSet = new Set();
+    
+    h.forEach(order => {
+        if(order && order.branch) {
+            const b = String(order.branch).toLowerCase();
+            const o = String(order.orderedBy || "").toLowerCase();
+            if (!(b.includes('test') || b.includes('update') || b.includes('code') || o.includes('test') || o.includes('update') || o.includes('code'))) {
+                branchSet.add(order.branch);
+            }
+        }
+    });
+    
+    const expBranchSelect = document.getElementById('expBranch');
+    if(expBranchSelect) {
+        expBranchSelect.innerHTML = '<option value="ALL">ALL BRANCHES</option>';
+        let branches = Array.from(branchSet).sort();
+        branches.forEach(b => {
+            expBranchSelect.innerHTML += `<option value="${b}">${b}</option>`;
+        });
+    }
+}
+
+function openExport(e) {
+    if(e) e.stopPropagation();
+    populateExportBranches();
+    
+    promptAdminAction(() => {
+        const now = new Date();
+        const f   = new Date(now.getFullYear(), now.getMonth(), 1);
+        const l   = new Date(now.getFullYear(), now.getMonth()+1, 0);
+        
+        const startEl = document.getElementById('expStart');
+        const endEl = document.getElementById('expEnd');
+        const errDateEl = document.getElementById('errExportDate');
+        const exportModalEl = document.getElementById('exportModal');
+        
+        if(startEl) startEl.value = f.toISOString().split('T')[0];
+        if(endEl) endEl.value   = l.toISOString().split('T')[0];
+        if(errDateEl) errDateEl.classList.remove('show');
+        if(exportModalEl) exportModalEl.classList.remove('hidden');
+    }, "Export is restricted to admins only");
+}
+
+function closeExport(){ 
+    const modal = document.getElementById('exportModal');
+    if(modal) modal.classList.add('hidden'); 
+}
+
+function validateExportDates() {
+    const s = document.getElementById('expStart').value;
+    const e = document.getElementById('expEnd').value;
+    const err = document.getElementById('errExportDate');
+    if(s && e && e < s){ if(err) err.classList.add('show'); return false; }
+    if(err) err.classList.remove('show'); 
+    return true;
+}
+
 function doExport(type) {
     if(!validateExportDates()){ return; }
-    const branch=document.getElementById('expBranch').value;
-    const start =document.getElementById('expStart').value;
-    const end   =document.getElementById('expEnd').value;
-    if(!start||!end){ showAlert('សូមជ្រើសកាលបរិច្ឆេទ','Required','warning'); return; }
+    const branch = document.getElementById('expBranch').value;
+    const start  = document.getElementById('expStart').value;
+    const end    = document.getElementById('expEnd').value;
+    if(!start || !end){ showAlert('សូមជ្រើសកាលបរិច្ឆេទ','Required','warning'); return; }
     
-    let h=JSON.parse(localStorage.getItem(CACHE_KEY)||'[]');
+    let h = JSON.parse(localStorage.getItem(CACHE_KEY) || '[]');
     
     let f = h.filter(x => {
         const b = (x.branch || "").toLowerCase();
@@ -992,13 +1051,13 @@ function doExport(type) {
     
     if(!f.length){ showAlert('ពុំមានទិន្នន័យតាមលក្ខខណ្ឌនេះ!','No Data','warning'); return; }
 
-    if(type==='sheet'){
+    if(type === 'sheet'){
         const exportedAt = new Date().toLocaleString('en-GB',{
             year:'numeric',month:'short',day:'2-digit',
             hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true
         });
         
-        // 1. បង្កើត Data Rows
+        // 1. បង្កើត Data Rows តាម Dynamic bakeryItems
         const rows = f.map(r => {
             let rowData = {
                 'DO No': r.doNo,
@@ -1026,32 +1085,31 @@ function doExport(type) {
             'Ordered By': ''
         };
         
-        let grandTotalQty = 0;
         bakeryItems.forEach((it, idx) => {
             const itemKey = 'item' + (idx + 1);
             const sumItem = f.reduce((acc, r) => acc + (Number(r[itemKey]) || 0), 0);
             totalRowObj[it.name] = sumItem;
         });
 
-        grandTotalQty = f.reduce((acc, r) => acc + (Number(r.totalQty) || 0), 0);
+        let grandTotalQty = f.reduce((acc, r) => acc + (Number(r.totalQty) || 0), 0);
         totalRowObj['Total Qty'] = grandTotalQty;
         
-        rows.push(totalRowObj); // បញ្ចូល Total Row ទៅចុងក្រោយ
+        rows.push(totalRowObj);
 
-        const ws=XLSX.utils.json_to_sheet(rows);
+        const ws = XLSX.utils.json_to_sheet(rows);
         const dataLen = rows.length;
         XLSX.utils.sheet_add_aoa(ws,
             [[''], [`Food & Beverage Department — Auto generated at: ${exportedAt}`]],
             { origin: { r: dataLen + 1, c: 0 } }
         );
-        const wb=XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb,ws,'Bakery Report');
-        XLSX.writeFile(wb,`Bakery_${branch==='ALL'?'All':branch}_${start}_${end}.xlsx`);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Bakery Report');
+        XLSX.writeFile(wb, `Bakery_${branch === 'ALL' ? 'All' : branch}_${start}_${end}.xlsx`);
         closeExport();
-        showAlert('ទាញយក Excel បានជោគជ័យ!','Export Success','success');
+        showAlert('ទាញយក Excel បានជោគជ័យ!', 'Export Success', 'success');
 
     } else {
-        const pw=window.open('','','height=900,width=1400');
+        const pw = window.open('', '', 'height=900,width=1400');
         const exportedAt = new Date().toLocaleString('en-GB',{
             year:'numeric',month:'short',day:'2-digit',
             hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true
@@ -1072,22 +1130,22 @@ function doExport(type) {
             itemColumnSums[key] = f.reduce((sum, r) => sum + (Number(r[key]) || 0), 0);
         });
 
-        let grand=0, rowsHTML='';
-        f.forEach(r=>{
-            grand+=Number(r.totalQty);
+        let grand = 0, rowsHTML = '';
+        f.forEach(r => {
+            grand += Number(r.totalQty);
             let itemCells = '';
             bakeryItems.forEach((it, idx) => {
                 const itemKey = 'item' + (idx + 1);
-                itemCells += `<td class="num">${r[itemKey]||0}</td>`;
+                itemCells += `<td class="num">${r[itemKey] || 0}</td>`;
             });
 
-            rowsHTML+=`<tr>
+            rowsHTML += `<tr>
                    <td><b>${r.doNo}</b></td>
                    <td>${r.branch}</td>
                    <td>${r.orderDate}</td>
-                   <td>${r.orderedBy||'—'}</td>
+                   <td>${r.orderedBy || '—'}</td>
                    ${itemCells}
-                   <td class="num ttl"><b>${r.totalQty||0}</b></td>
+                   <td class="num ttl"><b>${r.totalQty || 0}</b></td>
                    </tr>`;
         });
 
@@ -1127,8 +1185,6 @@ function doExport(type) {
           tr:nth-child(even) { background:#f8fafc !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
           .num { text-align:center; }
           .ttl { background:#EFF8FF !important; color:#1B365D; font-weight:700; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-          .ft { display:flex; justify-content:space-between; margin-top:10px; font-size:9px; font-weight:700;
-                border-top:2px solid #e2e8f0; padding-top:8px; color:#1e293b; }
           .gen-footer { margin-top:10px; font-size:10px; color:#94a3b8; text-align:left; }
           @media print {
             body { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
@@ -1136,7 +1192,7 @@ function doExport(type) {
           </style></head><body>
           <div class="hdr">
             <h2>INDEPENDENCE HOTEL BY DARA — BAKERY REPORT</h2>
-            <p class="sub">Branch: ${branch==='ALL'?'All Branches':branch} &nbsp;|&nbsp; ${start} to ${end}</p>
+            <p class="sub">Branch: ${branch === 'ALL' ? 'All Branches' : branch} &nbsp;|&nbsp; ${start} to ${end}</p>
           </div>
           <table>
             <colgroup>
@@ -1154,7 +1210,7 @@ function doExport(type) {
           </div>
           </body></html>`);
         pw.document.close(); pw.focus();
-        setTimeout(()=>pw.print(),600);
+        setTimeout(() => pw.print(), 600);
         closeExport();
     }
 }
