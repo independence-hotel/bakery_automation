@@ -945,54 +945,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // ─── EXPORT (Admin Only) ─────────────────────────────────────
-function populateExportBranches() {
-    let h = JSON.parse(localStorage.getItem(CACHE_KEY) || '[]');
-    let branchSet = new Set();
-    
-    h.forEach(order => {
-        if(order.branch) {
-            const b = order.branch.toLowerCase();
-            const o = (order.orderedBy || "").toLowerCase();
-            if (!(b.includes('test') || b.includes('update') || b.includes('code') || o.includes('test') || o.includes('update') || o.includes('code'))) {
-                branchSet.add(order.branch);
-            }
-        }
-    });
-    
-    const expBranchSelect = document.getElementById('expBranch');
-    expBranchSelect.innerHTML = '<option value="ALL">ALL BRANCHES</option>';
-    
-    let branches = Array.from(branchSet).sort();
-    branches.forEach(b => {
-        expBranchSelect.innerHTML += `<option value="${b}">${b}</option>`;
-    });
-}
-
-function openExport(e) {
-    if(e) e.stopPropagation();
-    populateExportBranches();
-    
-    promptAdminAction(() => {
-        const now = new Date();
-        const f   = new Date(now.getFullYear(), now.getMonth(), 1);
-        const l   = new Date(now.getFullYear(), now.getMonth()+1, 0);
-        document.getElementById('expStart').value = f.toISOString().split('T')[0];
-        document.getElementById('expEnd').value   = l.toISOString().split('T')[0];
-        document.getElementById('errExportDate').classList.remove('show');
-        document.getElementById('exportModal').classList.remove('hidden');
-    }, "Export is restricted to admins only");
-}
-
-function closeExport(){ document.getElementById('exportModal').classList.add('hidden'); }
-
-function validateExportDates() {
-    const s=document.getElementById('expStart').value;
-    const e=document.getElementById('expEnd').value;
-    const err=document.getElementById('errExportDate');
-    if(s&&e&&e<s){ err.classList.add('show'); return false; }
-    err.classList.remove('show'); return true;
-}
-
 function doExport(type) {
     if(!validateExportDates()){ return; }
     const branch=document.getElementById('expBranch').value;
@@ -1018,14 +970,47 @@ function doExport(type) {
             year:'numeric',month:'short',day:'2-digit',
             hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true
         });
-        const rows=f.map(r=>({
-            'DO No':r.doNo,'Branch':r.branch,'Date':r.orderDate,'Time':r.pickupTime,
-            'Ordered By':r.orderedBy||'—',
-            'Pain Croissant':r.item1||0,'Chocolate Croissant':r.item2||0,
-            'Almond Croissant':r.item3||0,'Banana Cake':r.item4||0,
-            'Pain au Raisin Roll':r.item5||0,'Danish Banana':r.item6||0,
-            'Danish Apple':r.item7||0,'Total Qty':r.totalQty||0
-        }));
+        
+        // 1. បង្កើត Data Rows
+        const rows = f.map(r => {
+            let rowData = {
+                'DO No': r.doNo,
+                'Branch': r.branch,
+                'Date': r.orderDate,
+                'Time': r.pickupTime,
+                'Ordered By': r.orderedBy || '—'
+            };
+            
+            bakeryItems.forEach((it, idx) => {
+                const itemKey = 'item' + (idx + 1);
+                rowData[it.name] = r[itemKey] || 0;
+            });
+            
+            rowData['Total Qty'] = r.totalQty || 0;
+            return rowData;
+        });
+
+        // 2. បង្កើត Total Row សម្រាប់ Excel
+        let totalRowObj = {
+            'DO No': `TOTAL (${f.length} Records)`,
+            'Branch': '',
+            'Date': '',
+            'Time': '',
+            'Ordered By': ''
+        };
+        
+        let grandTotalQty = 0;
+        bakeryItems.forEach((it, idx) => {
+            const itemKey = 'item' + (idx + 1);
+            const sumItem = f.reduce((acc, r) => acc + (Number(r[itemKey]) || 0), 0);
+            totalRowObj[it.name] = sumItem;
+        });
+
+        grandTotalQty = f.reduce((acc, r) => acc + (Number(r.totalQty) || 0), 0);
+        totalRowObj['Total Qty'] = grandTotalQty;
+        
+        rows.push(totalRowObj); // បញ្ចូល Total Row ទៅចុងក្រោយ
+
         const ws=XLSX.utils.json_to_sheet(rows);
         const dataLen = rows.length;
         XLSX.utils.sheet_add_aoa(ws,
@@ -1044,24 +1029,55 @@ function doExport(type) {
             year:'numeric',month:'short',day:'2-digit',
             hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true
         });
-        let grand=0, rows='';
+        
+        let itemHeaders = '';
+        let colGroups = '<col class="c-do"><col class="c-branch"><col class="c-date"><col class="c-by">';
+        bakeryItems.forEach(it => {
+            itemHeaders += `<th>${it.name}</th>`;
+            colGroups += '<col class="c-item">';
+        });
+        colGroups += '<col class="c-total">';
+
+        // គណនាផលបូកសរុបតាម Column នីមួយៗសម្រាប់ PDF
+        let itemColumnSums = {};
+        bakeryItems.forEach((it, idx) => {
+            let key = 'item' + (idx + 1);
+            itemColumnSums[key] = f.reduce((sum, r) => sum + (Number(r[key]) || 0), 0);
+        });
+
+        let grand=0, rowsHTML='';
         f.forEach(r=>{
             grand+=Number(r.totalQty);
-            rows+=`<tr>
+            let itemCells = '';
+            bakeryItems.forEach((it, idx) => {
+                const itemKey = 'item' + (idx + 1);
+                itemCells += `<td class="num">${r[itemKey]||0}</td>`;
+            });
+
+            rowsHTML+=`<tr>
                    <td><b>${r.doNo}</b></td>
                    <td>${r.branch}</td>
                    <td>${r.orderDate}</td>
                    <td>${r.orderedBy||'—'}</td>
-                   <td class="num">${r.item1||0}</td>
-                   <td class="num">${r.item2||0}</td>
-                   <td class="num">${r.item3||0}</td>
-                   <td class="num">${r.item4||0}</td>
-                   <td class="num">${r.item5||0}</td>
-                   <td class="num">${r.item6||0}</td>
-                   <td class="num">${r.item7||0}</td>
+                   ${itemCells}
                    <td class="num ttl"><b>${r.totalQty||0}</b></td>
                    </tr>`;
         });
+
+        // បង្កើត Total Cells សម្រាប់ Table Footer ក្នុង PDF
+        let totalCellsHTML = '';
+        bakeryItems.forEach((it, idx) => {
+            let key = 'item' + (idx + 1);
+            totalCellsHTML += `<td class="num" style="background:#e2e8f0; font-weight:bold;">${itemColumnSums[key]}</td>`;
+        });
+
+        // បន្ថែម Total Row នៅខាងក្រោមបង្អស់នៃ Table
+        rowsHTML += `<tr style="background:#cbd5e1; font-weight:bold; border-top:2px solid #1B365D;">
+            <td colspan="4" style="text-align:right;">TOTAL (${f.length} Records):</td>
+            ${totalCellsHTML}
+            <td class="num ttl" style="background:#cbd5e1; color:#1B365D;"><b>${grand}</b></td>
+        </tr>`;
+        
         pw.document.write(`<html><head><title>Bakery Report</title>
           <style>
           @page { size: A4 landscape; margin: 10mm 12mm; }
@@ -1097,24 +1113,16 @@ function doExport(type) {
           </div>
           <table>
             <colgroup>
-              <col class="c-do"><col class="c-branch"><col class="c-date">
-              <col class="c-by"><col class="c-item"><col class="c-item">
-              <col class="c-item"><col class="c-item"><col class="c-item">
-              <col class="c-item"><col class="c-item"><col class="c-total">
+              ${colGroups}
             </colgroup>
             <thead><tr>
               <th>DO No</th><th>Branch</th><th>Date</th><th>Ordered By</th>
-              <th>Pain<br>Croissant</th><th>Choc<br>Croissant</th><th>Almond<br>Croissant</th>
-              <th>Banana<br>Cake</th><th>Pain au<br>Raisin Roll</th><th>Danish<br>Banana</th>
-              <th>Danish<br>Apple</th><th>Total<br>Qty</th>
+              ${itemHeaders}
+              <th>Total<br>Qty</th>
             </tr></thead>
-            <tbody>${rows}</tbody>
+            <tbody>${rowsHTML}</tbody>
           </table>
-          <div class="ft">
-            <span>Total Orders: ${f.length} records</span>
-            <span>Grand Total Qty: ${grand} units</span>
-          </div>
-          <div class="gen-footer">
+          <div class="gen-footer" style="margin-top:15px;">
             Food &amp; Beverage Department &nbsp;—&nbsp; Auto generated at: ${exportedAt}
           </div>
           </body></html>`);
