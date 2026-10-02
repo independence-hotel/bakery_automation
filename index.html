@@ -948,14 +948,16 @@ document.addEventListener('DOMContentLoaded', () => {
 // ─── EXPORT (Admin Only) ─────────────────────────────────────
 function populateExportBranches() {
     let h = JSON.parse(localStorage.getItem(CACHE_KEY) || '[]');
-    let branchSet = new Set();
+    let branchMap = new Map(); // ប្រើ Map ដើម្បីធានាឈ្មោះសាខាមិនស្ទួនទាំង Case និង Space
     
     h.forEach(order => {
         if(order && order.branch) {
-            const b = String(order.branch).toLowerCase();
+            const rawBranch = String(order.branch).trim(); // កាត់ដកឃ្លាលើស
+            const b = rawBranch.toLowerCase();
             const o = String(order.orderedBy || "").toLowerCase();
+            
             if (!(b.includes('test') || b.includes('update') || b.includes('code') || o.includes('test') || o.includes('update') || o.includes('code'))) {
-                branchSet.add(order.branch);
+                branchMap.set(b, rawBranch);
             }
         }
     });
@@ -963,12 +965,15 @@ function populateExportBranches() {
     const expBranchSelect = document.getElementById('expBranch');
     if(expBranchSelect) {
         expBranchSelect.innerHTML = '<option value="ALL">ALL BRANCHES</option>';
-        let branches = Array.from(branchSet).sort();
+        let branches = Array.from(branchMap.values()).sort();
         branches.forEach(b => {
             expBranchSelect.innerHTML += `<option value="${b}">${b}</option>`;
         });
     }
 }
+```[cite: 2]
+
+បន្ទាប់ពីរួចរាល់ សូម Save និង Refresh កម្មវិធីរបស់អ្នកជាការស្រេច!
 
 function openExport(e) {
     if(e) e.stopPropagation();
