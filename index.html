@@ -948,16 +948,14 @@ document.addEventListener('DOMContentLoaded', () => {
 // ─── EXPORT (Admin Only) ─────────────────────────────────────
 function populateExportBranches() {
     let h = JSON.parse(localStorage.getItem(CACHE_KEY) || '[]');
-    let branchMap = new Map(); // ប្រើ Map ដើម្បីធានាឈ្មោះសាខាមិនស្ទួនទាំង Case និង Space
+    let branchSet = new Set();
     
     h.forEach(order => {
         if(order && order.branch) {
-            const rawBranch = String(order.branch).trim(); // កាត់ដកឃ្លាលើស
-            const b = rawBranch.toLowerCase();
+            const b = String(order.branch).toLowerCase();
             const o = String(order.orderedBy || "").toLowerCase();
-            
             if (!(b.includes('test') || b.includes('update') || b.includes('code') || o.includes('test') || o.includes('update') || o.includes('code'))) {
-                branchMap.set(b, rawBranch);
+                branchSet.add(order.branch);
             }
         }
     });
@@ -965,13 +963,12 @@ function populateExportBranches() {
     const expBranchSelect = document.getElementById('expBranch');
     if(expBranchSelect) {
         expBranchSelect.innerHTML = '<option value="ALL">ALL BRANCHES</option>';
-        let branches = Array.from(branchMap.values()).sort();
+        let branches = Array.from(branchSet).sort();
         branches.forEach(b => {
             expBranchSelect.innerHTML += `<option value="${b}">${b}</option>`;
         });
     }
 }
-```[cite: 2]
 
 function openExport(e) {
     if(e) e.stopPropagation();
