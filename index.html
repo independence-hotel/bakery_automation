@@ -945,27 +945,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // ─── EXPORT (Admin Only) ─────────────────────────────────────
-// ─── EXPORT (Admin Only) ─────────────────────────────────────
 function populateExportBranches() {
     let h = JSON.parse(localStorage.getItem(CACHE_KEY) || '[]');
     let branchSet = new Set();
     
     h.forEach(order => {
-        if(order && order.branch) {
-            const b = String(order.branch).toLowerCase();
-            const o = String(order.orderedBy || "").toLowerCase();
-            if (!(b.includes('test') || b.includes('update') || b.includes('code') || o.includes('test') || o.includes('update') || o.includes('code'))) {
-                branchSet.add(order.branch);
+        if (order && order.branch) {
+            let cleanBranch = String(order.branch).trim();
+            let b = cleanBranch.toLowerCase();
+            let o = String(order.orderedBy || "").toLowerCase();
+            
+            let isTest = b.includes('test') || b.includes('update') || b.includes('code') || 
+                           o.includes('test') || o.includes('update') || o.includes('code');
+            
+            if (!isTest && cleanBranch !== "") {
+                branchSet.add(cleanBranch);
             }
         }
     });
     
     const expBranchSelect = document.getElementById('expBranch');
-    if(expBranchSelect) {
+    if (expBranchSelect) {
         expBranchSelect.innerHTML = '<option value="ALL">ALL BRANCHES</option>';
         let branches = Array.from(branchSet).sort();
         branches.forEach(b => {
-            expBranchSelect.innerHTML += `<option value="${b}">${b}</option>`;
+            expBranchSelect.innerHTML += '<option value="' + b + '">' + b + '</option>';
         });
     }
 }
