@@ -945,17 +945,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // ─── EXPORT (Admin Only) ─────────────────────────────────────
-// ─── EXPORT (Admin Only) ─────────────────────────────────────
 function populateExportBranches() {
     let h = JSON.parse(localStorage.getItem(CACHE_KEY) || '[]');
     let branchSet = new Set();
     
     h.forEach(order => {
         if(order && order.branch) {
-            const b = String(order.branch).toLowerCase();
+            const cleanBranch = String(order.branch).trim();
+            const b = cleanBranch.toLowerCase();
             const o = String(order.orderedBy || "").toLowerCase();
+            
             if (!(b.includes('test') || b.includes('update') || b.includes('code') || o.includes('test') || o.includes('update') || o.includes('code'))) {
-                branchSet.add(order.branch);
+                branchSet.add(cleanBranch);
             }
         }
     });
@@ -969,6 +970,9 @@ function populateExportBranches() {
         });
     }
 }
+```[cite: 2, 4]
+
+បន្ទាប់ពីរៀបចំរួច សូម Save និង Refresh កម្មវិធីរបស់អ្នកជាការស្រេច!
 
 function openExport(e) {
     if(e) e.stopPropagation();
