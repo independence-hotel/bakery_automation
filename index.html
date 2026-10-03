@@ -950,26 +950,25 @@ function populateExportBranches() {
     let branchSet = new Set();
     
     h.forEach(order => {
-        if (order && order.branch) {
-            let cleanBranch = String(order.branch).trim();
-            let b = cleanBranch.toLowerCase();
-            let o = String(order.orderedBy || "").toLowerCase();
+        if(order && order.branch) {
+            // Trim space ខាងដើមនិងខាងចុង ដើម្បីការពារការស្ទួន
+            const normalizedBranch = String(order.branch).trim();
+            const b = normalizedBranch.toLowerCase();
+            const o = String(order.orderedBy || "").toLowerCase();
             
-            let isTest = b.includes('test') || b.includes('update') || b.includes('code') || 
-                           o.includes('test') || o.includes('update') || o.includes('code');
-            
-            if (!isTest && cleanBranch !== "") {
-                branchSet.add(cleanBranch);
+            if (!(b.includes('test') || b.includes('update') || b.includes('code') || o.includes('test') || o.includes('update') || o.includes('code'))) {
+                // បញ្ចូលឈ្មោះដែលបាន trim រួចទៅក្នុង Set
+                branchSet.add(normalizedBranch);
             }
         }
     });
     
     const expBranchSelect = document.getElementById('expBranch');
-    if (expBranchSelect) {
+    if(expBranchSelect) {
         expBranchSelect.innerHTML = '<option value="ALL">ALL BRANCHES</option>';
         let branches = Array.from(branchSet).sort();
         branches.forEach(b => {
-            expBranchSelect.innerHTML += '<option value="' + b + '">' + b + '</option>';
+            expBranchSelect.innerHTML += `<option value="${b}">${b}</option>`;
         });
     }
 }
