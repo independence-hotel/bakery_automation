@@ -945,6 +945,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // ─── EXPORT (Admin Only) ─────────────────────────────────────
+// Remove zero-width / non-breaking characters so old Google Form rows
+// ("BROWN - \u200BIndependence Beach") match the clean dropdown value.
+function normBranch(s) {
+    return String(s || '')
+        .replace(/[\u200B-\u200D\uFEFF]/g, '')
+        .replace(/\u00A0/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
 function populateExportBranches() {
     let h = JSON.parse(localStorage.getItem(CACHE_KEY) || '[]');
     let branchSet = new Set();
@@ -952,7 +962,7 @@ function populateExportBranches() {
     h.forEach(order => {
         if(order && order.branch) {
             // Trim space ខាងដើមនិងខាងចុង ដើម្បីការពារការស្ទួន
-            const normalizedBranch = String(order.branch).trim();
+            const normalizedBranch = normBranch(order.branch);
             const b = normalizedBranch.toLowerCase();
             const o = String(order.orderedBy || "").toLowerCase();
             
@@ -1023,7 +1033,7 @@ function doExport(type) {
         const isTest = b.includes('test') || b.includes('update') || b.includes('code') || 
                        o.includes('test') || o.includes('update') || o.includes('code');
                        
-        return !isTest && (branch === 'ALL' || x.branch === branch) && x.orderDate >= start && x.orderDate <= end;
+        return !isTest && (branch === 'ALL' || normBranch(x.branch) === branch) && x.orderDate >= start && x.orderDate <= end;
     });
     
     if(!f.length){ showAlert('ពុំមានទិន្នន័យតាមលក្ខខណ្ឌនេះ!','No Data','warning'); return; }
@@ -1038,7 +1048,7 @@ function doExport(type) {
         const rows = f.map(r => {
             let rowData = {
                 'DO No': r.doNo,
-                'Branch': r.branch,
+                'Branch': normBranch(r.branch),
                 'Date': r.orderDate,
                 'Time': r.pickupTime,
                 'Ordered By': r.orderedBy || '—'
@@ -1118,7 +1128,7 @@ function doExport(type) {
 
             rowsHTML += `<tr>
                    <td><b>${r.doNo}</b></td>
-                   <td>${r.branch}</td>
+                   <td>${normBranch(r.branch)}</td>
                    <td>${r.orderDate}</td>
                    <td>${r.orderedBy || '—'}</td>
                    ${itemCells}
